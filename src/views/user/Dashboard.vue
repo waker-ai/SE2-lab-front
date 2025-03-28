@@ -3,20 +3,21 @@ import {ref, computed} from 'vue'
 import {userInfo, userInfoUpdate} from '../../api/user.ts'
 import {parseRole} from "../../utils"
 import {router} from '../../router'
-import {UserFilled} from "@element-plus/icons-vue";
+import {UserFilled, UploadFilled} from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
+import {uploadImage} from "../../api/tools.ts";
 
 const username = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const name = ref('')
-
 const role = ref('')
 const avatar = ref('')
 // const storeName = ref('')
 const telephone = ref('')
 const email = ref('')
 const location = ref('')
+const imageFileList = ref([])
 
 const newUsername = ref('')
 const newName = ref('')
@@ -116,6 +117,27 @@ function updatePassword() {
     }
   })
 }
+
+function handleChange(file: any, fileList: any)
+{
+  imageFileList.value = fileList
+  let formData = new FormData()
+  formData.append('file', file.raw)
+  uploadImage(formData).then(res => {
+    newAvatar.value = res.data.result
+  }).catch(error => {
+    console.error("图片上传失败:", error)
+    ElMessage.error("图片上传失败，请重试！")
+  })
+}
+function handleExceed() {
+  ElMessage.warning(`当前限制选择 1 个文件`);
+}
+
+function uploadHttpRequest() {
+  return new XMLHttpRequest()
+}
+
 </script>
 
 
@@ -175,6 +197,25 @@ function updatePassword() {
       </template>
 
       <el-form>
+        <el-form-item label="头像">
+          <el-upload
+              v-model:file-list="imageFileList"
+              :limit="1"
+              :on-change="handleChange"
+              :on-exceed="handleExceed"
+              :on-remove="handleChange"
+              class="upload-demo"
+              list-type="picture"
+              :http-request="uploadHttpRequest"
+              drag>
+            <el-icon class="el-icon--upload">
+              <upload-filled/>
+            </el-icon>
+            <div class="el-upload__text">
+              将图片拖到此处或单击此处上传，仅允许上传一张图片
+            </div>
+          </el-upload>
+        </el-form-item>
         <el-form-item>
           <label for="username">用户名</label>
           <el-input type="text" id="username" v-model="newUsername"/>

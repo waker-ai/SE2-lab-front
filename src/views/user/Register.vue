@@ -14,12 +14,9 @@ const role = ref('')
 const telephone = ref('')
 const email = ref('')
 const location = ref('')
-// const confirmEmail = ref('')
 const confirmPassword = ref('')
 const imageFileList = ref([])
 
-//对于商家用户，还需要在注册时选择所属商店，从而传入storeId。但由于Lab2才会开发商店模块，所以这里暂且设置唯一一个Id为1的商店1，待Lab2完善
-// const storeId = ref()
 
 //用户名是否为空
 const hasUsernameInput = computed(() => username.value != '')
@@ -27,9 +24,7 @@ const hasUsernameInput = computed(() => username.value != '')
 const hasPasswordInput = computed(() => password.value != '')
 //姓名是否为空
 const hasNameInput = computed(() => name.value != '')
-// 头像Url是否为空
-// const hasAvatarInput = computed(() => avatar.value != '')
-// const hasImageFile = computed(() => avatar.value != '')
+
 //身份是都为空
 const hasRoleChosen = computed(() => role.value != '')
 // 电话号码是否为空
@@ -67,11 +62,6 @@ const registerDisabled = computed(() => {
         hasConfirmPasswordInput.value && isPasswordIdentical.value && hasRoleChosen.value
     )
   }
-  // else if (role.value == 'ADMINISTRATOR') {
-  //   return !(hasUsernameInput.value && hasPasswordInput.value && hasNameInput.value &&
-  //       hasConfirmPasswordInput.value && isPasswordIdentical.value && hasRoleChosen.value
-  //   )
-  // }
 })
 
 // 注册按钮触发
@@ -187,7 +177,6 @@ function uploadHttpRequest() {
                            style="width: 100%;"
                 >
                   <el-option value="CUSTOMER" label="顾客"/>
-                  <el-option value="STAFF" label="商家"/>
                 </el-select>
               </el-form-item>
             </el-col>
@@ -226,33 +215,6 @@ function uploadHttpRequest() {
               </el-form-item>
             </el-col>
 
-            <el-col :span="7" v-if="role==='STAFF'">
-              <el-form-item>
-                <label for="location">
-                  地址
-                </label>
-                <el-input id="location"
-                          v-model="location"
-                          placeholder="请输入地址"/>
-              </el-form-item>
-            </el-col>
-
-            <el-col :span="1" v-if="role==='STAFF'"></el-col>
-
-<!--            <el-col :span="7" v-if="role==='STAFF'">-->
-<!--              <el-form-item>-->
-<!--                <label for="address">-->
-<!--                  所属商店（需待Lab2中完善）-->
-<!--                </label>-->
-<!--                <el-select id="storeName"-->
-<!--                           v-model="storeId"-->
-<!--                           placeholder="请选择"-->
-<!--                           style="width: 100%;"-->
-<!--                >-->
-<!--                  <el-option value="1" label="商店1"/>-->
-<!--                </el-select>-->
-<!--              </el-form-item>-->
-<!--            </el-col>-->
 
           </el-row>
 
