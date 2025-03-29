@@ -33,6 +33,7 @@ type UpdateInfo = {
 export const userLogin = (loginInfo: LoginInfo) => {
     return axios.post(`${USER_MODULE}/login`, null, {params: loginInfo})
         .then(res => {
+            console.log(res)
             return res
         })
 }
@@ -48,7 +49,7 @@ export const userRegister = (registerInfo: RegisterInfo) => {
 
 // 获取用户信息
 export const userInfo = () => {
-    return axios.get(`${USER_MODULE}/{username}`)
+    return axios.get(`${USER_MODULE}/${sessionStorage.getItem('username')}`)
         .then(res => {
             return res
         })

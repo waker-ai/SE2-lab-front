@@ -34,14 +34,10 @@ function handleLogin() {
         type: 'success',
         center: true,
       })
-      const token = res.data.result
-      sessionStorage.setItem('token', token)
-
-      userInfo().then(res => {
-        sessionStorage.setItem('name', res.data.result.name)
-        sessionStorage.setItem('role', res.data.result.role)
-        router.push({path: "/dashboard"})
-      })
+      const userData = res.data.data
+      sessionStorage.setItem('username', userData.username)  // 存用户名
+      sessionStorage.setItem('role', userData.role)  // 也存角色
+      router.replace({path: "/dashboard"})
     } else if (res.data.code === '400') {
       ElMessage({
         message: res.data.msg,

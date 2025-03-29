@@ -6,6 +6,7 @@ import {router} from '../../router'
 import {UserFilled, UploadFilled} from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import {uploadImage} from "../../api/tools.ts";
+import { onMounted } from 'vue'
 
 const username = ref('')
 const password = ref('')
@@ -40,8 +41,13 @@ const changeDisabled = computed(() => {
   return !(hasConfirmPasswordInput.value && isPasswordIdentical.value)
 })
 
+onMounted(() => {
+  getUserInfo()
+})
+
 function getUserInfo() {
   userInfo().then(res => {
+    console.log(res)
     username.value = res.data.data.username
     name.value = res.data.data.name
     role.value = res.data.data.role
@@ -49,7 +55,7 @@ function getUserInfo() {
     telephone.value = res.data.data.telephone
     email.value = res.data.data.email
     location.value = res.data.data.location
-    newName.value = res.data.data.username
+    newUsername.value = res.data.data.username
   })
 }
 
@@ -84,15 +90,15 @@ function updateInfo() {
 function updatePassword() {
   userInfoUpdate({
     username: username.value,
-    // name: newName.value || name.value,
-    // avatar: avatar.value,
-    // role: role.value,
-    // telephone: telephone.value,
-    // email: email.value,
-    // location: location.value,
-    password: undefined,
+    name: undefined,
+    avatar: undefined,
+    role: undefined,
+    telephone: undefined,
+    email: undefined,
+    location: undefined,
+    password: password.value,
   }).then(res => {
-    if (res.data.code === '000') {
+    if (res.data.code === '200') {
       password.value = ''
       confirmPassword.value = ''
       ElMessageBox.alert(
@@ -105,7 +111,7 @@ function updatePassword() {
             showClose: false,
             roundButton: true,
             center: true
-          }).then(() => router.push({path: "/login"}))
+          }).then(() => router.replace({path: "/login"}))
     } else if (res.data.code === '400') {
       ElMessage({
         customClass: 'customMessage',
@@ -240,10 +246,10 @@ function uploadHttpRequest() {
                     :rules="[{ pattern: chinaMobileRegex, message: '手机号格式错误', trigger: 'blur' }]" />
         </el-form-item>
 
-        <el-form-tiem>
+        <el-form-item>
           <label for="email">邮箱</label>
           <el-input id="email" v-model="newEmail" :rules="[{ pattern: emailRegex, message: '邮箱格式错误', trigger: 'blur' }]" />
-        </el-form-tiem>
+        </el-form-item>
 
         <el-form-item v-if="role === 'CUSTOMER' || role === 'STAFF'">
           <label for="address">地址</label>
