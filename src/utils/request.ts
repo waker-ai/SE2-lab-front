@@ -5,14 +5,14 @@ const service = axios.create()
 
 //判断是否登录
 function hasToken() {
-    return !(sessionStorage.getItem('token') == '')
+    return !(sessionStorage.getItem('username') == '')
 }
 
 //当前实例的拦截器，对所有要发送给后端的请求进行处理，在其中加入token
 service.interceptors.request.use(
     config => {
         if(hasToken()) {
-            config.headers['token'] = sessionStorage.getItem('token')
+            config.headers['username'] = sessionStorage.getItem('username')
         }
         return config
     },

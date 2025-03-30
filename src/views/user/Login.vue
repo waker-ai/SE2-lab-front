@@ -2,7 +2,7 @@
 import {ElForm, ElFormItem} from "element-plus"
 import {ref, computed} from 'vue'
 import {router} from '../../router'
-import {userInfo, userLogin} from "../../api/user.ts"
+import {userLogin} from "../../api/user.ts"
 
 
 // 输入框值（需要在前端拦截不合法输入：是否为空+额外规则）
@@ -21,23 +21,24 @@ const loginDisabled = computed(() => {
   return !(hasUserNameInput.value &&  hasPasswordInput.value)
 })
 
-
 // 登录按钮触发
 function handleLogin() {
   userLogin({
     username: username.value,
     password: password.value
   }).then(res => {
+    // console.log(res)
     if (res.data.code === '200') {
       ElMessage({
         message: "登录成功！",
         type: 'success',
         center: true,
       })
-      const userData = res.data.data
-      sessionStorage.setItem('username', userData.username)  // 存用户名
-      sessionStorage.setItem('role', userData.role)  // 也存角色
-      router.replace({path: "/dashboard"})
+      const token = res.data.data.username
+      sessionStorage.setItem('username', token)
+      sessionStorage.setItem('role', res.data.data.role)
+      router.push({path: "/dashboard"})
+
     } else if (res.data.code === '400') {
       ElMessage({
         message: res.data.msg,

@@ -20,7 +20,8 @@ function logout() {
         center: true
       }
   ).then(() => {
-    sessionStorage.setItem('token', '')
+    // sessionStorage.setItem('username', '')
+    sessionStorage.clear(); // 确保清空所有存储信息
     router.push({path: "/login"})
   })
 }
@@ -38,7 +39,7 @@ function logout() {
       </el-col>
 
       <el-col :span="2">
-        <el-tag class="role-tag" size="large">{{ parseRole(role) }}版</el-tag>
+<!--        <el-tag class="role-tag" size="large">{{ parseRole(role) }}版</el-tag>-->
       </el-col>
 
       <el-col :span="16">

@@ -37,7 +37,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, _, next) => {
-    const token: string | null = sessionStorage.getItem('token');
+    const token: string | null = sessionStorage.getItem('username');
     const role: string | null = sessionStorage.getItem('role')
 
     if (to.meta.title) {

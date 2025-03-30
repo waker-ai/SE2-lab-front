@@ -7,6 +7,7 @@ import {UserFilled, UploadFilled} from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import {uploadImage} from "../../api/tools.ts";
 import { onMounted } from 'vue'
+import { watch } from 'vue'
 
 const username = ref('')
 const password = ref('')
@@ -45,9 +46,20 @@ onMounted(() => {
   getUserInfo()
 })
 
+// watch([newUsername, newName, newAvatar, newRole, newTelephone, newEmail, newLocation], ([newU, newN, newA, newR, newT, newE, newL]) => {
+//   console.log("用户信息发生修改：");
+//   if (newU !== username.value) console.log(`用户名: ${username.value} -> ${newU}`);
+//   if (newN !== name.value) console.log(`姓名: ${name.value} -> ${newN}`);
+//   if (newA !== avatar.value) console.log(`头像: ${avatar.value} -> ${newA}`);
+//   if (newR !== role.value) console.log(`角色: ${role.value} -> ${newR}`);
+//   if (newT !== telephone.value) console.log(`电话: ${telephone.value} -> ${newT}`);
+//   if (newE !== email.value) console.log(`邮箱: ${email.value} -> ${newE}`);
+//   if (newL !== location.value) console.log(`地址: ${location.value} -> ${newL}`);
+// });
+
 function getUserInfo() {
   userInfo().then(res => {
-    console.log(res)
+    // console.log(res)
     username.value = res.data.data.username
     name.value = res.data.data.name
     role.value = res.data.data.role
@@ -69,7 +81,9 @@ function updateInfo() {
     email: newEmail.value || email.value,
     location: newLocation.value || location.value,
     password: undefined,
+
   }).then(res => {
+    console.log(res)
     if (res.data.code === '200') {
       ElMessage({
         customClass: 'customMessage',
@@ -251,7 +265,7 @@ function uploadHttpRequest() {
           <el-input id="email" v-model="newEmail" :rules="[{ pattern: emailRegex, message: '邮箱格式错误', trigger: 'blur' }]" />
         </el-form-item>
 
-        <el-form-item v-if="role === 'CUSTOMER' || role === 'STAFF'">
+        <el-form-item v-if="role === 'CUSTOMER'">
           <label for="address">地址</label>
           <el-input id="address" type="textarea"
                     rows="4"

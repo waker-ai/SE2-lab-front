@@ -82,7 +82,7 @@ function handleRegister() {
         type: 'success',
         center: true,
       })
-      router.push({path: "/login"})
+      router.push('/login')
     } else if (res.data.code === '400') {
       ElMessage({
         message: res.data.msg,
