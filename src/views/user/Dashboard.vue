@@ -165,7 +165,8 @@ function uploadHttpRequest() {
   <el-main class="main-container">
     <el-card class="aside-card">
       <div class="avatar-area">
-        <el-avatar :icon="UserFilled" :size="80">
+        <el-avatar :src="newAvatar || avatar" :size="80">
+          <UserFilled v-if="!(newAvatar || avatar)" />
         </el-avatar>
         <span class="avatar-text"> 欢迎您，{{ name }}</span>
       </div>

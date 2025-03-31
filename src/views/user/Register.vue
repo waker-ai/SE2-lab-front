@@ -96,14 +96,15 @@ function handleRegister() {
 function handleChange(file: any, fileList: any)
 {
   imageFileList.value = fileList
-  let formData = new FormData()
-  formData.append('file', file.raw)
-  uploadImage(formData).then(res => {
-    avatar.value = res.data.result
-  }).catch(error => {
-    console.error("图片上传失败:", error)
-    ElMessage.error("图片上传失败，请重试！")
-  })
+  imageFileList.value = fileList
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      avatar.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file.raw)
+  }
+
 }
 function handleExceed() {
   ElMessage.warning(`当前限制选择 1 个文件`);
