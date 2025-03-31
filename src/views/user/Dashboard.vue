@@ -90,6 +90,9 @@ function updateInfo() {
         type: 'success',
         message: '更新成功！',
       })
+      // 清空选择的图片列表
+      imageFileList.value = [];
+      newAvatar.value = '';
       getUserInfo()
     } else if (res.data.code === '400') {
       ElMessage({
@@ -141,15 +144,16 @@ function updatePassword() {
 function handleChange(file: any, fileList: any)
 {
   imageFileList.value = fileList
-  let formData = new FormData()
-  formData.append('file', file.raw)
-  uploadImage(formData).then(res => {
-    newAvatar.value = res.data.result
-  }).catch(error => {
-    console.error("图片上传失败:", error)
-    ElMessage.error("图片上传失败，请重试！")
-  })
+  imageFileList.value = fileList
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      newAvatar.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file.raw)
+  }
 }
+
 function handleExceed() {
   ElMessage.warning(`当前限制选择 1 个文件`);
 }
@@ -165,8 +169,8 @@ function uploadHttpRequest() {
   <el-main class="main-container">
     <el-card class="aside-card">
       <div class="avatar-area">
-        <el-avatar :src="newAvatar || avatar" :size="80">
-          <UserFilled v-if="!(newAvatar || avatar)" />
+        <el-avatar :src="avatar" :size="80">
+          <UserFilled v-if="!(avatar)" />
         </el-avatar>
         <span class="avatar-text"> 欢迎您，{{ name }}</span>
       </div>

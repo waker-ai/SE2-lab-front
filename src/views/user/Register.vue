@@ -3,7 +3,7 @@ import {ref, computed} from 'vue'
 import {router} from '../../router'
 import {UploadFilled} from "@element-plus/icons-vue"
 import {userRegister} from "../../api/user.ts"
-import {uploadImage} from "../../api/tools.ts"
+// import {uploadImage} from "../../api/tools.ts"
 
 // 输入框值（需要在前端拦截不合法输入：是否为空+额外规则）
 const username = ref('')
@@ -104,8 +104,8 @@ function handleChange(file: any, fileList: any)
     }
     reader.readAsDataURL(file.raw)
   }
-
 }
+
 function handleExceed() {
   ElMessage.warning(`当前限制选择 1 个文件`);
 }
