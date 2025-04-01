@@ -26,6 +26,38 @@ const router = createRouter({
             },
         ]
     }, {
+        path: '/home',
+        redirect: '/mainpage',
+        component: () => import('../views/Home.vue'),
+        children: [
+            {
+                path: '/mainpage',
+                name: 'MainPage',
+                component: () => import('../views/MainPage/MainPage.vue'),
+                meta: {title: '个人信息'}
+            },
+        ]
+},{
+    path:'/createproduct',
+    component:()=>import('../views/Product/CreateProduct.vue') ,
+    meta:{
+        title:'创建商品',
+    },
+    },{
+        path:'/products/:id',
+        name:'productDetail',
+        component:()=>import('../views/Product/ProductDetail.vue'),
+        meta:{title:'商品详情'}
+    }, {
+        path:'/products',
+        name:'ProductList',
+        component:()=>import('../views/MainPage/MainPage.vue'),
+        meta:{title:'商品列表'}
+        },{
+        path:'/admin/products',
+        name:'AdminProductManagement',
+        component:()=>import('../views/Product/AdminProductManagement.vue')
+    },{
         path: '/404',
         name: '404',
         component: () => import('../views/NotFound.vue'),

@@ -3,7 +3,7 @@ import {ref, computed} from 'vue'
 import {router} from '../../router'
 import {UploadFilled} from "@element-plus/icons-vue"
 import {userRegister} from "../../api/user.ts"
-import {uploadImage} from "../../api/tools.ts"
+// import {uploadImage} from "../../api/tools.ts"
 
 // 输入框值（需要在前端拦截不合法输入：是否为空+额外规则）
 const username = ref('')
@@ -96,15 +96,16 @@ function handleRegister() {
 function handleChange(file: any, fileList: any)
 {
   imageFileList.value = fileList
-  let formData = new FormData()
-  formData.append('file', file.raw)
-  uploadImage(formData).then(res => {
-    avatar.value = res.data.result
-  }).catch(error => {
-    console.error("图片上传失败:", error)
-    ElMessage.error("图片上传失败，请重试！")
-  })
+  imageFileList.value = fileList
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      avatar.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file.raw)
+  }
 }
+
 function handleExceed() {
   ElMessage.warning(`当前限制选择 1 个文件`);
 }
@@ -148,7 +149,7 @@ function uploadHttpRequest() {
                 <label for="username">
                   <span class="required">*</span>用户名
                 </label>
-<!--                <label v-else class="error-warn" v-if="!hasUsernameInput">用户名不能为空</label>-->
+                <!--                <label v-else class="error-warn" v-if="!hasUsernameInput">用户名不能为空</label>-->
                 <el-input id="username" v-model="username" placeholder="请输入用户名" />
               </el-form-item>
             </el-col>
