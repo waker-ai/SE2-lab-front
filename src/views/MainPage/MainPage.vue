@@ -11,7 +11,7 @@ const router = useRouter()
 
 // 获取用户身份
 const userRole = ref(sessionStorage.getItem('role')) // 从 sessionStorage 获取角色
-const isAdmin = computed(() => userRole.value === 'admin') // 判断是否是管理员
+const isAdmin = computed(() => userRole.value === 'ADMINISTRATOR') // 判断是否是管理员
 
 // 获取书籍数据
 const fetchBooks = async () => {

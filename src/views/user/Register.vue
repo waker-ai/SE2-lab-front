@@ -178,6 +178,7 @@ function uploadHttpRequest() {
                            style="width: 100%;"
                 >
                   <el-option value="CUSTOMER" label="顾客"/>
+                  <el-option value="ADMINISTRATOR" label="管理员"/>
                 </el-select>
               </el-form-item>
             </el-col>

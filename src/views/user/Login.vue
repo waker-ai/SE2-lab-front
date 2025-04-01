@@ -37,7 +37,7 @@ function handleLogin() {
       const token = res.data.data.username
       sessionStorage.setItem('username', token)
       sessionStorage.setItem('role', res.data.data.role)
-      router.push({path: "/dashboard"})
+      router.push({path: "/mainpage"})
 
     } else if (res.data.code === '400') {
       ElMessage({
