@@ -10,14 +10,14 @@ const products = ref<Product[]>([])
 const fetchProducts = async () => {
   try {
     const response = await getProductList()
-    products.value = response.data
+    products.value = response.data.data
   } catch (error) {
     console.error('获取商品失败:', error)
   }
 }
 
 // 删除商品
-const handleDelete = async (id: string) => {
+const handleDelete = async (id: number) => {
   ElMessageBox.confirm('确定删除该商品吗？', '警告', {
     confirmButtonText: '删除',
     cancelButtonText: '取消',
@@ -34,7 +34,7 @@ const handleDelete = async (id: string) => {
 }
 
 // 修改库存
-const handleAdjustStock = async (id: string) => {
+const handleAdjustStock = async (id: number) => {
   const newStock = prompt('请输入新的库存数量:')
   if (newStock) {
     try {

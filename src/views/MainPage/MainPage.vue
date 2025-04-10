@@ -13,11 +13,14 @@ const router = useRouter()
 const userRole = ref(sessionStorage.getItem('role')) // 从 sessionStorage 获取角色
 const isAdmin = computed(() => userRole.value === 'ADMINISTRATOR') // 判断是否是管理员
 
+
+
 // 获取书籍数据
 const fetchBooks = async () => {
   try {
     const response = await getProductList()
-    books.value = response.data
+    console.log(response.data)
+    books.value = response.data.data
   } catch (error) {
     console.error('获取书籍失败:', error)
   }
@@ -26,7 +29,7 @@ const fetchBooks = async () => {
 // 组件加载时获取书籍
 onMounted(fetchBooks)
 
-const goToDetail=(id:string)=>{
+const goToDetail=(id:number)=>{
   router.push(`/products/${id}`)
 }
 
@@ -53,7 +56,7 @@ const goToCreate=()=>{
     <!--商品列表-->
     <el-row :gutter="20" class="product-item-list">
       <el-col v-for="book in books" :key="book.id" :span="6">
-        <el-card shadow="hover" class="book-card" @click="goToDetail(book.id)">
+        <el-card shadow="hover" class="book-card" @click="goToDetail(book.id!)">
           <img :src="book.cover" class="book-cover" />
           <div class="book-title">{{ book.title }}</div>
           <div class="book-price">￥{{book.price}}</div>

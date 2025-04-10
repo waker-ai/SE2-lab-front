@@ -4,7 +4,8 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { UploadFilled, Back } from '@element-plus/icons-vue'
 import { createProduct } from '../../api/product'
-import {uploadImage} from "../../api/tools.ts";
+import {API_MODULE} from "../../api/_prefix.ts";
+
 
 const router = useRouter()
 //const id = Number(router.currentRoute.value.params.storeId)
@@ -28,15 +29,47 @@ const specifications = ref([
 
 // 图片上传
 const imageFileList = ref([])
-const handleUploadChange = (file: any) => {
-  const formData = new FormData()
-  formData.append('file', file.raw)
+const handleUploadChange = async (file: any) => {
+  try {
+    // 本地预览
+    if (file.raw) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        coverUrl.value = e.target?.result as string // 临时预览
+      }
+      reader.readAsDataURL(file.raw)
+    }
 
-  uploadImage(formData).then(res => {
-    coverUrl.value = res.data.result
+    // 获取签名
+    const signRes = await fetch(`${API_MODULE}/oss/signature`)
+    if (!signRes.ok) throw new Error('获取签名失败')
+    const signData = await signRes.json()
+
+    const filename = `${signData.dir}${Date.now()}-${Math.floor(Math.random() * 1000)}.jpg`
+    const formData = new FormData()
+    formData.append('key', filename)
+    formData.append('policy', signData.policy)
+    formData.append('OSSAccessKeyId', signData.accessid)
+    formData.append('signature', signData.signature)
+    formData.append('success_action_status', '200')
+    formData.append('file', file.raw)
+
+    const ossRes = await fetch(signData.host, {
+      method: 'POST',
+      body: formData
+    })
+    if (ossRes.status !== 200) throw new Error('OSS 上传失败')
+
+    // 设置封面 URL 为 OSS 上的地址
+    coverUrl.value = `${signData.host}/${filename}`
     ElMessage.success('封面上传成功')
-  })
+  } catch (error: any) {
+    ElMessage.error(error.message || '上传失败')
+    coverUrl.value = ''
+    console.error('上传错误:', error)
+  }
 }
+
 
 // 表单验证
 const isValid = computed(() => {
@@ -127,6 +160,11 @@ const handleBack = () => {
               :show-file-list="false"
               :http-request="() => {}"
               accept="image/*"
+              :before-upload="(file:File)=>{
+                const isValid =file.type.startsWith('image/');
+                if(!isValid) ElMessage.error('只能上传图片文件');
+                return isValid;
+              }"
           >
             <el-button type="primary" plain>
               <el-icon><UploadFilled /></el-icon>

@@ -17,8 +17,21 @@ export default defineConfig({
             resolvers: [ElementPlusResolver()],
         })],
     server: {
-        port: 3000,   //设定前端运行的端口
+        port: 3000,
         open: true,
+        proxy: {
+            '/upload': {
+                target: 'http://localhost:8080', // 你的 Spring Boot 服务地址
+                changeOrigin: true,
+                secure: false,
+                rewrite:(path)=>path.replace(/^\upload/,'/upload')
+            },
+            '/api': {
+                target: 'http://localhost:8080',
+                changeOrigin: true,
+                secure: false,
+            }
+        }
     },
     base: './'
 })

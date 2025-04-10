@@ -14,7 +14,10 @@ const error=ref<string|null>(null)
 
 const fetchProduct = async () => {
   try {
-    const productId = route.params.id as string
+    const productId = Number(route.params.id) // 强制转换为 number 类型
+    if (isNaN(productId)) {
+      throw new Error('无效的商品 ID')
+    }
     const [productRes, stockRes] = await Promise.all([
       getProductDetail(productId),
       getProductStock(productId)
