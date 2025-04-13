@@ -58,6 +58,7 @@ onMounted(fetchProducts)
       <el-table-column prop="price" label="价格" width="100" />
       <el-table-column prop="rate" label="评分" width="100" />
       <el-table-column prop="id" label="商品ID" width="150" />
+      <el-table-column prop="stockAmount" label="库存" width="120" />
       <el-table-column label="操作" width="300">
         <template #default="{ row }">
           <el-button type="warning" @click="handleAdjustStock(row.id)">调整库存</el-button>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getProductDetail, getProductStock,Product,Stock} from '../../api/product'
+import { getProductDetail,Product} from '../../api/product'
 import { useRoute } from 'vue-router'
 import {ElMessage} from "element-plus";
 
@@ -8,7 +8,6 @@ import {ElMessage} from "element-plus";
 const route = useRoute()
 const product = ref<Product|null>(null)
 const loading=ref(true)
-const stock = ref<Stock|null>(null)
 const error=ref<string|null>(null)
 
 
@@ -18,12 +17,11 @@ const fetchProduct = async () => {
     if (isNaN(productId)) {
       throw new Error('无效的商品 ID')
     }
-    const [productRes, stockRes] = await Promise.all([
-      getProductDetail(productId),
-      getProductStock(productId)
-    ])
-    product.value = productRes.data
-    stock.value = stockRes.data
+    const productRes = await getProductDetail(productId)
+
+    console.log('Product response:', productRes);  // 调试打印
+
+    product.value = productRes.data.data
   } catch (err) {
     console.error('获取商品详情失败:', err)
     error.value = '无法加载商品信息，请稍后再试'
@@ -57,7 +55,8 @@ const addToCart=()=>{
           <h2>{{ product.title }}</h2>
           <p class="price">价格：<span>¥{{ product.price }}</span></p>
           <p>评分：<el-rate v-model="product.rate" disabled /></p>
-          <p>库存：<strong>{{ stock?.amount || '暂无库存信息' }}</strong></p>
+          <p>库存：<strong>{{ product.stockAmount || '暂无库存信息' }}</strong></p> <!-- 库存数量 -->
+          <p>冻结库存：<strong>{{ product.frozen || '无冻结库存' }}</strong></p> <!-- 冻结库存 -->
           <el-button type="primary" @click="addToCart">加入购物车</el-button>
         </div>
       </div>

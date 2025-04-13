@@ -9,6 +9,8 @@ export interface Product {
     cover: string
     detail: string
     specifications: Specification[]
+    stockAmount: number  // 库存数量
+    frozen: number
 }
 
 export interface Specification {
@@ -18,12 +20,6 @@ export interface Specification {
     productId: string
 }
 
-export interface Stock {
-    id: number
-    amount: number
-    frozen: number
-    productId: string
-}
 
 export const getProductList = () => axios.get('/api/products')
 
@@ -35,8 +31,8 @@ export const updateProduct = (data: any) => axios.put('/api/products', data)
 
 export const deleteProduct = (id: number) => axios.delete(`/api/products/${id}`)
 
-export const getProductStock = (id: number) =>
-    axios.get(`/api/products/stockpile/${id}`)
+export const getProductStock = (id: number) => axios.get(`/api/products/stockpile/${id}`)
 
-export const adjustStock = (id: number, amount: number) =>
-    axios.patch(`/api/products/stockpile/${id}`, { amount })
+export function adjustStock(productId: number, amount: number) {
+    return axios.patch(`/api/products/stockpile/${productId}?amount=${amount}`)
+}

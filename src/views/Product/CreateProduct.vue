@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { UploadFilled, Back } from '@element-plus/icons-vue'
-import { createProduct } from '../../api/product'
+import { createProduct,adjustStock } from '../../api/product'
 import {API_MODULE} from "../../api/_prefix.ts";
 
 
@@ -16,6 +16,7 @@ const category = ref('')
 const price = ref(0)
 const coverUrl = ref('')
 const description = ref('')
+const stockAmount=ref(0)
 
 // 规格信息
 const specifications = ref([
@@ -78,6 +79,7 @@ const isValid = computed(() => {
       category.value.trim() !== '' &&
       price.value > 0 &&
       coverUrl.value !== '' &&
+      stockAmount.value>=0&&
       specifications.value.every(spec =>
           ['作者', 'ISBN', '出版社'].includes(spec.item)
               ? spec.value.trim() !== ''
@@ -94,6 +96,7 @@ const handleSubmit = async () => {
     description: description.value,
     cover: coverUrl.value,
     detail:description.value,
+    stockAmount:stockAmount.value,
     specifications: specifications.value.map(spec => ({
       item: spec.item,
       value: spec.value,
@@ -101,14 +104,22 @@ const handleSubmit = async () => {
     }))
   }
 
+  console.log('提交前的 payload:', JSON.stringify(payload, null, 2))
+
   try {
     const res = await createProduct(payload)
-    if (res.data.code === '200') {
-      ElMessage.success('商品创建成功')
-      //router.push(`/mainpage`)
+    if (res.data.code !== '200') {
+      throw new Error('商品创建失败')
     }
+    const productId=res.data.data.id;
+    console.log(productId);
+    if(stockAmount.value>0)
+      await adjustStock(productId,stockAmount.value)
+    ElMessage.success('商品创建成功')
+    router.push('/mainpage')
   } catch (error:any) {
     ElMessage.error(error.response?.data?.msg || '创建失败')
+    console.error('创建失败:',error)
   }
 }
 
@@ -153,7 +164,12 @@ const handleBack = () => {
           <el-input-number v-model="price" :min="0.01" :step="0.1" style="width: 100%" />
         </el-form-item>
 
+        <el-form-item label="库存" required>
+          <el-input-number v-model="stockAmount" :min="0" style="width: 100%"  placeholder="请输入初始库存量"/>
+        </el-form-item>
+
         <el-form-item label="封面" required>
+
           <el-upload
               v-model:file-list="imageFileList"
               :on-change="handleUploadChange"
