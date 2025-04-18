@@ -1,24 +1,31 @@
-import {axios} from '../utils/request'
+import {axios} from '../utils/request'//不能是 axios from 'axios'
 import {USER_MODULE} from './_prefix'
 
 type LoginInfo = {
-    phone: string,
+    username: string,
     password: string
 }
 
 type RegisterInfo = {
-    role: string,
-    name: string,
-    phone: string,
+    username: string, //用户名，必须唯一
     password: string,
-    address: string,
-    storeId?: number,
+    name: string, //真实姓名
+    avatar?: string, //头像URL
+    role: string,
+    telephone?: string,
+    email?: string,
+    location?: string
 }
 
 type UpdateInfo = {
-    name?: string,
+    username: string,
     password?: string,
-    address?: string,
+    name?: string,
+    avatar?: string,
+    role?: string,
+    telephone?: string,
+    email?: string,
+    location?: string,
 }
 
 // 如果有“Vue: This may be converted to an async function”警告，可以不管
@@ -26,13 +33,14 @@ type UpdateInfo = {
 export const userLogin = (loginInfo: LoginInfo) => {
     return axios.post(`${USER_MODULE}/login`, null, {params: loginInfo})
         .then(res => {
+            console.log(res)
             return res
         })
 }
 
-// 用户注册
+// 创建用户
 export const userRegister = (registerInfo: RegisterInfo) => {
-    return axios.post(`${USER_MODULE}/register`, registerInfo,
+    return axios.post(`${USER_MODULE}`, registerInfo,
         {headers: {'Content-Type': 'application/json'}})
         .then(res => {
             return res
@@ -40,16 +48,29 @@ export const userRegister = (registerInfo: RegisterInfo) => {
 }
 
 // 获取用户信息
+// 获取用户信息
 export const userInfo = () => {
-    return axios.get(`${USER_MODULE}`)
+    const token = sessionStorage.getItem('token');
+    console.log("token", token)
+    const username = sessionStorage.getItem('username');
+    return axios.get(`${USER_MODULE}/${username}`, {
+        headers: {
+            'token': token
+        }
+    })
         .then(res => {
-            return res
+            console.log("User info response:", res);
+            return res;
         })
+        .catch(error => {
+            console.error("Error fetching user info:", error);
+            throw error;
+        });
 }
 
 // 更新用户信息
 export const userInfoUpdate = (updateInfo: UpdateInfo) => {
-    return axios.post(`${USER_MODULE}`, updateInfo, {headers: {'Content-Type': 'application/json'}})
+    return axios.put(`${USER_MODULE}`, updateInfo, {headers: {'Content-Type': 'application/json'}},)
         .then(res => {
             return res
         })

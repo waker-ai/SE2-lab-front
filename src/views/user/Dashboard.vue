@@ -1,23 +1,39 @@
 <script setup lang="ts">
 import {ref, computed} from 'vue'
 import {userInfo, userInfoUpdate} from '../../api/user.ts'
-import {parseRole, parseTime} from "../../utils"
+import {parseRole} from "../../utils"
 import {router} from '../../router'
-import {UserFilled} from "@element-plus/icons-vue";
+import {UserFilled, UploadFilled} from "@element-plus/icons-vue";
+import { ElMessage } from "element-plus";
+import { onMounted } from 'vue'
 
-const role = sessionStorage.getItem("role")
+
+const username = ref('')
+const password = ref('')
+const confirmPassword = ref('')
 const name = ref('')
-const storeName = ref('')
-const tel = ref('')
-const address = ref('')
-const regTime = ref()
+const role = ref('')
+const avatar = ref('')
+// const storeName = ref('')
+const telephone = ref('')
+const email = ref('')
+const location = ref('')
+const imageFileList = ref([])
 
+const newUsername = ref('')
 const newName = ref('')
+const newAvatar = ref('')
+const newRole = ref('')
+const newTelephone = ref('')
+const newEmail = ref('')
+const newLocation = ref('')
 
 const displayInfoCard = ref(false)
 
-const password = ref('')
-const confirmPassword = ref('')
+// 电话号码的规则
+const chinaMobileRegex = /^1(3[0-9]|4[579]|5[0-35-9]|6[2567]|7[0-8]|8[0-9]|9[189])\d{8}$/
+//邮箱格式规则
+const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 const hasConfirmPasswordInput = computed(() => confirmPassword.value != '')
 const isPasswordIdentical = computed(() => password.value == confirmPassword.value)
@@ -25,32 +41,57 @@ const changeDisabled = computed(() => {
   return !(hasConfirmPasswordInput.value && isPasswordIdentical.value)
 })
 
-getUserInfo()
+onMounted(() => {
+  getUserInfo()
+})
+
+// watch([newUsername, newName, newAvatar, newRole, newTelephone, newEmail, newLocation], ([newU, newN, newA, newR, newT, newE, newL]) => {
+//   console.log("用户信息发生修改：");
+//   if (newU !== username.value) console.log(`用户名: ${username.value} -> ${newU}`);
+//   if (newN !== name.value) console.log(`姓名: ${name.value} -> ${newN}`);
+//   if (newA !== avatar.value) console.log(`头像: ${avatar.value} -> ${newA}`);
+//   if (newR !== role.value) console.log(`角色: ${role.value} -> ${newR}`);
+//   if (newT !== telephone.value) console.log(`电话: ${telephone.value} -> ${newT}`);
+//   if (newE !== email.value) console.log(`邮箱: ${email.value} -> ${newE}`);
+//   if (newL !== location.value) console.log(`地址: ${location.value} -> ${newL}`);
+// });
 
 function getUserInfo() {
   userInfo().then(res => {
-    name.value = res.data.result.name
-    tel.value = res.data.result.phone
-    storeName.value = res.data.result.storeName
-    address.value = res.data.result.address
-    regTime.value = parseTime(res.data.result.createTime)
-
-    newName.value = name.value
+    // console.log(res)
+    username.value = res.data.data.username
+    name.value = res.data.data.name
+    role.value = res.data.data.role
+    avatar.value = res.data.data.avatar
+    telephone.value = res.data.data.telephone
+    email.value = res.data.data.email
+    location.value = res.data.data.location
+    newUsername.value = res.data.data.username
   })
 }
 
 function updateInfo() {
   userInfoUpdate({
-    name: newName.value,
+    username: newUsername.value || username.value,
+    name: newName.value || name.value,
+    avatar: newAvatar.value || avatar.value,
+    role: newRole.value || role.value,
+    telephone: newTelephone.value || telephone.value,
+    email: newEmail.value || email.value,
+    location: newLocation.value || location.value,
     password: undefined,
-    address: address.value,
+
   }).then(res => {
-    if (res.data.code === '000') {
+    console.log(res)
+    if (res.data.code === '200') {
       ElMessage({
         customClass: 'customMessage',
         type: 'success',
         message: '更新成功！',
       })
+      // 清空选择的图片列表
+      imageFileList.value = [];
+      newAvatar.value = '';
       getUserInfo()
     } else if (res.data.code === '400') {
       ElMessage({
@@ -64,11 +105,16 @@ function updateInfo() {
 
 function updatePassword() {
   userInfoUpdate({
+    username: username.value,
     name: undefined,
+    avatar: undefined,
+    role: undefined,
+    telephone: undefined,
+    email: undefined,
+    location: undefined,
     password: password.value,
-    address: undefined
   }).then(res => {
-    if (res.data.code === '000') {
+    if (res.data.code === '200') {
       password.value = ''
       confirmPassword.value = ''
       ElMessageBox.alert(
@@ -81,7 +127,7 @@ function updatePassword() {
             showClose: false,
             roundButton: true,
             center: true
-          }).then(() => router.push({path: "/login"}))
+          }).then(() => router.replace({path: "/login"}))
     } else if (res.data.code === '400') {
       ElMessage({
         customClass: 'customMessage',
@@ -93,6 +139,28 @@ function updatePassword() {
     }
   })
 }
+
+function handleChange(file: any, fileList: any)
+{
+  imageFileList.value = fileList
+  imageFileList.value = fileList
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      newAvatar.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file.raw)
+  }
+}
+
+function handleExceed() {
+  ElMessage.warning(`当前限制选择 1 个文件`);
+}
+
+function uploadHttpRequest() {
+  return new XMLHttpRequest()
+}
+
 </script>
 
 
@@ -100,7 +168,8 @@ function updatePassword() {
   <el-main class="main-container">
     <el-card class="aside-card">
       <div class="avatar-area">
-        <el-avatar :icon="UserFilled" :size="80">
+        <el-avatar :src="avatar" :size="80">
+          <UserFilled v-if="!(avatar)" />
         </el-avatar>
         <span class="avatar-text"> 欢迎您，{{ name }}</span>
       </div>
@@ -120,25 +189,26 @@ function updatePassword() {
           </el-button>
         </template>
 
+        <el-descriptions-item label="用户名">
+          <el-tag>{{username}}</el-tag>
+        </el-descriptions-item>
+
         <el-descriptions-item label="身份">
           <el-tag>{{ parseRole(role) }}</el-tag>
         </el-descriptions-item>
 
-        <el-descriptions-item label="所属商店" v-if="role === 'STAFF'">
-          {{ storeName }}
-        </el-descriptions-item>
-
         <el-descriptions-item label="联系电话">
-          {{ tel }}
+          {{ telephone }}
         </el-descriptions-item>
 
-        <el-descriptions-item label="地址" v-if="role === 'CUSTOMER' || role === 'STAFF'">
-          {{ address }}
+        <el-descriptions-item label="邮箱">
+          {{ email }}
         </el-descriptions-item>
 
-        <el-descriptions-item label="注册时间">
-          {{ regTime }}
+        <el-descriptions-item label="地址" v-if="role == 'CUSTOMER' ">
+          {{ location }}
         </el-descriptions-item>
+
       </el-descriptions>
     </el-card>
 
@@ -151,21 +221,59 @@ function updatePassword() {
       </template>
 
       <el-form>
+        <el-form-item label="头像">
+          <el-upload
+              v-model:file-list="imageFileList"
+              :limit="1"
+              :on-change="handleChange"
+              :on-exceed="handleExceed"
+              :on-remove="handleChange"
+              class="upload-demo"
+              list-type="picture"
+              :http-request="uploadHttpRequest"
+              drag>
+            <el-icon class="el-icon--upload">
+              <upload-filled/>
+            </el-icon>
+            <div class="el-upload__text">
+              将图片拖到此处或单击此处上传，仅允许上传一张图片
+            </div>
+          </el-upload>
+        </el-form-item>
         <el-form-item>
-          <label for="name">昵称</label>
+          <label for="username">用户名</label>
+          <el-input type="text" id="username" v-model="newUsername"/>
+        </el-form-item>
+
+        <el-form-item>
+          <label for="name">姓名</label>
           <el-input type="text" id="name" v-model="newName"/>
         </el-form-item>
 
         <el-form-item>
-          <label for="phone">手机号</label>
-          <el-input id="phone" v-model="tel" disabled/>
+          <label for="role">身份</label>
+          <el-select v-model="newRole">
+            <el-option label="管理员" value="ADMINISTRATOR"></el-option>
+            <el-option label="普通用户" value="CUSTOMER"></el-option>
+          </el-select>
         </el-form-item>
 
-        <el-form-item v-if="role === 'CUSTOMER' || role === 'STAFF'">
-          <label for="address">收货地址</label>
+        <el-form-item>
+          <label for="phone">手机号</label>
+          <el-input id="phone" v-model="newTelephone"
+                    :rules="[{ pattern: chinaMobileRegex, message: '手机号格式错误', trigger: 'blur' }]" />
+        </el-form-item>
+
+        <el-form-item>
+          <label for="email">邮箱</label>
+          <el-input id="email" v-model="newEmail" :rules="[{ pattern: emailRegex, message: '邮箱格式错误', trigger: 'blur' }]" />
+        </el-form-item>
+
+        <el-form-item v-if="role === 'CUSTOMER'">
+          <label for="address">地址</label>
           <el-input id="address" type="textarea"
                     rows="4"
-                    v-model="address" placeholder="中华门"></el-input>
+                    v-model="newLocation" placeholder="中华门"></el-input>
         </el-form-item>
       </el-form>
     </el-card>

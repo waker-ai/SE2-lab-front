@@ -1,4 +1,6 @@
 import {createRouter, createWebHashHistory} from "vue-router"
+import Order from "../views/Cart/Order.vue";
+import Cart from "../views/Cart/Cart.vue";
 
 const router = createRouter({
     history: createWebHashHistory(),
@@ -9,7 +11,8 @@ const router = createRouter({
         path: '/login',
         component: () => import('../views/user/Login.vue'),
         meta: {title: '用户登录'}
-    }, {
+    },
+        {
         path: '/register',
         component: () => import('../views/user/Register.vue'),
         meta: {title: '用户注册'}
@@ -26,6 +29,48 @@ const router = createRouter({
             },
         ]
     }, {
+        path: '/home',
+        redirect: '/mainpage',
+        component: () => import('../views/Home.vue'),
+        children: [
+            {
+                path: '/mainpage',
+                name: 'MainPage',
+                component: () => import('../views/MainPage/MainPage.vue'),
+                meta: {title: '个人信息'}
+            },
+        ]
+},{
+    path:'/createproduct',
+    component:()=>import('../views/Product/CreateProduct.vue') ,
+    meta:{
+        title:'创建商品',
+    },
+    },{
+        path:'/products/:id',
+        name:'productDetail',
+        component:()=>import('../views/Product/ProductDetail.vue'),
+        meta:{title:'商品详情'}
+    }, {
+        path:'/products',
+        name:'ProductList',
+        component:()=>import('../views/MainPage/MainPage.vue'),
+        meta:{title:'商品列表'}
+        },{
+        path:'/admin/products',
+        name:'AdminProductManagement',
+        component:()=>import('../views/Product/AdminProductManagement.vue')
+    }, {
+            path: '/cart',
+            name: 'Cart',
+            component: Cart
+        },
+        {
+            path: '/order',
+            name: 'Order',
+            component: Order
+        },
+        {
         path: '/404',
         name: '404',
         component: () => import('../views/NotFound.vue'),
@@ -37,7 +82,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, _, next) => {
-    const token: string | null = sessionStorage.getItem('token');
+    const token: string | null = sessionStorage.getItem('username');
     const role: string | null = sessionStorage.getItem('role')
 
     if (to.meta.title) {
