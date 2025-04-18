@@ -1,6 +1,6 @@
 <!-- src/views/Order.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { submitOrder, initiatePayment } from '../../api/order'
 import { ElMessage } from 'element-plus'
@@ -12,30 +12,60 @@ const shippingAddress = ref({
   address: '',
   zipCode: ''
 })
+const cartItemIds = ref<string[]>(['13'])
 const paymentMethod = ref('ALIPAY')
 const paymentForm = ref<string | null>(null)
+
 const submitOrderAndPay = async () => {
   try {
     // 提交订单
+    console.log("提交订单的 cartItemIds: ", cartItemIds.value);
     const orderResponse = await submitOrder({
-
-      cartItemIds: ['10'], // 从购物车页面传递过来的商品ID列表
+      cartItemIds: cartItemIds.value,// 从购物车页面传递过来的商品ID列表
       shippingAddress: shippingAddress.value,
       paymentMethod: paymentMethod.value
     })
 
+    console.log("orderResponse: ")
+    console.log(orderResponse)
+
     const orderId = orderResponse.data.data.orderId
 
     // 发起支付
-    const paymentResponse = await initiatePayment(orderId)
+    try {
+      const paymentResponse = await initiatePayment(orderId);
+      if (paymentResponse.data.data.paymentForm) {
+        paymentForm.value = paymentResponse.data.data.paymentForm;
+      } else {
+        throw new Error("支付表单数据为空");
+      }
+    } catch (error) {
+      console.error("支付过程出现错误:", error);
+      ElMessage.error("支付表单获取失败，请稍后再试");
+    }
 
-    // 显示支付表单
-    paymentForm.value = paymentResponse.data.data.paymentForm
+    //这里确保支付表单渲染后自动提交
+    nextTick(() => {
+      if (paymentForm.value) {
+        const formElement = document.createElement('div');
+        formElement.innerHTML = paymentForm.value;
+
+        // 将支付表单动态添加到 DOM 中
+        document.body.appendChild(formElement);
+
+        // 自动提交支付表单
+        const form = formElement.querySelector('form');
+        if (form) {
+          form.submit();
+        }
+      }
+    });
     // 这里需要根据实际情况处理支付表单的展示，可能需要使用 v-html 或其他方式
-
+    // console.log("支付表单内容：", paymentForm.value);
     ElMessage.success('订单提交成功，请完成支付')
   } catch (error) {
     ElMessage.error('订单提交失败')
+    // console.error('支付过程出现错误: ', error);
   }
 }
 const goBack = () => {
