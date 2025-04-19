@@ -1,9 +1,10 @@
 <!-- src/views/Order.vue -->
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref, nextTick ,onMounted} from 'vue'
 import { useRouter } from 'vue-router'
 import { submitOrder, initiatePayment } from '../../api/order'
 import { ElMessage } from 'element-plus'
+import {getCartList} from "../../api/cart.ts";
 
 const router = useRouter()
 const shippingAddress = ref({
@@ -12,13 +13,33 @@ const shippingAddress = ref({
   address: '',
   zipCode: ''
 })
-const cartItemIds = ref<string[]>(['32'])
+const cartItemIds = ref<string[]>([])
 const paymentMethod = ref('ALIPAY')
 const paymentForm = ref<string | null>(null)
-
+interface CartItem {
+  cartItemId: string;
+  productId: number;
+  title: string;
+  price: number;
+  description: string;
+  cover: string;
+  detail: string;
+  quantity: number;
+}
+const fetchCartItems = async () => {
+  try {
+    const response = await getCartList()
+    const cartData = response.data.data
+    cartItemIds.value = cartData.items.map((item: CartItem) => item.cartItemId)
+    console.log("购物车商品总数：", cartData.total)
+    console.log("购物车总金额：", cartData.totalAmount)
+  } catch (error) {
+    ElMessage.error('获取购物车列表失败')
+  }
+}
 const submitOrderAndPay = async () => {
   try {
-    // 提交订单
+
     console.log("提交订单的 cartItemIds: ", cartItemIds.value);
     const orderResponse = await submitOrder({
       cartItemIds: cartItemIds.value,// 从购物车页面传递过来的商品ID列表
@@ -71,6 +92,7 @@ const submitOrderAndPay = async () => {
 const goBack = () => {
   router.push('/cart')
 }
+onMounted(fetchCartItems)
 </script>
 
 <template>

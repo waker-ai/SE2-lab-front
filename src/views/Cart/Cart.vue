@@ -21,7 +21,7 @@ const fetchCartItems = async () => {
   try {
     const response = await getCartList()
     // cartItems.value = cloneDeep(response.data.data.items)
-    cartItems.value = response.data.data.items.map(item => ({
+    cartItems.value = response.data.data.items.map((item:CartItem) => ({
       ...item,
       originalQuantity: item.quantity  // 保存商品的原始数量
     }))
