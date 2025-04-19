@@ -12,7 +12,7 @@ const shippingAddress = ref({
   address: '',
   zipCode: ''
 })
-const cartItemIds = ref<string[]>(['13'])
+const cartItemIds = ref<string[]>(['32'])
 const paymentMethod = ref('ALIPAY')
 const paymentForm = ref<string | null>(null)
 
