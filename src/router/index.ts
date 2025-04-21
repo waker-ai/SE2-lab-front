@@ -1,6 +1,9 @@
 import {createRouter, createWebHashHistory} from "vue-router"
 import Order from "../views/Cart/Order.vue";
 import Cart from "../views/Cart/Cart.vue";
+import AdvertisementList from '../views/Advertisement/AdvertisementList.vue'
+import AdvertisementEdit from '../views/Advertisement/AdvertisementEdit.vue'
+
 
 const router = createRouter({
     history: createWebHashHistory(),
@@ -78,7 +81,16 @@ const router = createRouter({
     }, {
         path: '/:catchAll(.*)',
         redirect: '/404'
-    }]
+    },{
+            path: '/advertisement',
+            name: 'AdvertisementList',
+            component: AdvertisementList
+        },
+        {
+            path: '/advertisement/edit',
+            name: 'AdvertisementEdit',
+            component: AdvertisementEdit
+        },]
 })
 
 router.beforeEach((to, _, next) => {

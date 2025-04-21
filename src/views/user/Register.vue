@@ -276,43 +276,83 @@ function uploadHttpRequest() {
 </template>
 
 
+
 <style scoped>
 .main-frame {
   width: 100%;
   height: 100%;
-
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .bgimage {
-  background-image: url("../../assets/shopping-1s-1084px.svg");
+  background-image: url("../../assets/background.png");
+  background-size: cover;
+  background-position: center;
 }
 
 .login-card {
   width: 60%;
-  padding: 10px;
+  padding: 30px;
+  backdrop-filter: blur(15px); /* 强化模糊效果 */
+  background-color: rgba(255, 255, 255, 0.15); /* 半透明白色背景 */
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2); /* 添加发光边框 */
+}
+
+:deep(.transparent-input .el-input__inner) {
+  background-color: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.4); /* 更亮的边框 */
+  color: white !important;
+  caret-color: #409EFF;
+}
+
+:deep(.transparent-input .el-input__inner::placeholder) {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:deep(.transparent-input .el-input__inner:hover) {
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+:deep(.transparent-input .el-input__inner:focus) {
+  border-color: #409EFF;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3);
+}
+
+/* 特殊样式覆盖 */
+.el-form-item__label {
+  color: white !important;
 }
 
 .error-warn {
-  color: red;
+  color: #ff4949 !important; /* 更亮的错误提示 */
 }
 
 .required {
-  color: red;
+  color: #ff4949 !important;
 }
 
-.error-warn-input {
-  --el-input-focus-border-color: red;
+.upload-demo {
+  --el-upload-dragger-bg-color: rgba(255, 255, 255, 0.1);
+  --el-upload-dragger-border-color: rgba(255, 255, 255, 0.4);
+  --el-upload-dragger-hover-border-color: rgba(255, 255, 255, 0.8);
 }
 
 .button-group {
-  padding-top: 10px;
-  display: flex;
-  flex-direction: row;
-  gap: 30px;
-  align-items: center;
-  justify-content: right;
+  gap: 20px;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+.el-button--primary {
+  background-color: #409EFF;
+  border-color: #409EFF;
+}
+
+.el-button--primary:hover {
+  background-color: #66b1ff;
+  border-color: #66b1ff;
 }
 </style>
