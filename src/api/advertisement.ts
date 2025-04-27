@@ -1,6 +1,14 @@
 // src/api/advertisement.ts
-import axios from 'axios'
+import {axios} from '../utils/request'
 
+
+export interface Advertisement {
+    id?: number
+    title: string
+    content: string
+    imgUrl: string
+    productId: number
+}
 // 获取广告列表
 export const getAdvertisements = () => {
     return axios.get('/api/advertisements')

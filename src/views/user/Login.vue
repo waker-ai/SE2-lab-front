@@ -2,7 +2,7 @@
 import {ElForm, ElFormItem} from "element-plus"
 import {ref, computed} from 'vue'
 import {router} from '../../router'
-import {userLogin} from "../../api/user.ts"
+import {userInfo, userLogin} from "../../api/user.ts"
 
 
 // 输入框值（需要在前端拦截不合法输入：是否为空+额外规则）
@@ -27,6 +27,8 @@ function handleLogin() {
     username: username.value,
     password: password.value
   }).then(res => {
+    sessionStorage.setItem('username',username.value)
+    console.log('username',username.value)
     // console.log(res)
     if (res.data.code === '200') {
       ElMessage({
@@ -34,10 +36,19 @@ function handleLogin() {
         type: 'success',
         center: true,
       })
-      const token = res.data.data.username
-      sessionStorage.setItem('username', token)
-      sessionStorage.setItem('role', res.data.data.role)
-      router.push({path: "/advertisement"})
+      const token = res.data.data
+      console.log(token)
+      sessionStorage.setItem('token', token)
+      //sessionStorage.setItem('role', res.data.data.role)
+      userInfo().then(res=>{
+        console.log(res)
+
+        sessionStorage.setItem('role',res.data.data.role)
+
+        console.log('role',res.data.data.role)
+
+        router.push({path: "/mainpage"})
+      })
 
     } else if (res.data.code === '400') {
       ElMessage({
