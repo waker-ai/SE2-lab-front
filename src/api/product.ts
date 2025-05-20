@@ -2,6 +2,7 @@ import {axios} from '../utils/request'
 
 export interface Product {
     id?: number
+    category: string
     title: string
     price: number
     rate?: number

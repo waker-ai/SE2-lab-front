@@ -3,6 +3,7 @@ import Order from "../views/Cart/Order.vue";
 import Cart from "../views/Cart/Cart.vue";
 import AdvertisementList from '../views/AdvertiseMent/AdvertisementList.vue'
 import AdvertisementEdit from '../views/AdvertiseMent/AdvertisementEdit.vue'
+import OrderHistory from "../views/Order/OrderHistory.vue";
 
 
 const router = createRouter({
@@ -19,7 +20,21 @@ const router = createRouter({
         path: '/register',
         component: () => import('../views/user/Register.vue'),
         meta: {title: '用户注册'}
-    }, {
+    },{
+        path:'/MemberCharge',
+        component:()=>import('../views/MemberShip/MemberCharge.vue'),
+        meta:{title:'会员充值'}
+        },{
+            path:'/MemberDetail',
+            component:()=>import('../views/MemberShip/MemberDetail.vue'),
+            meta:{title:'会员详情'}
+        },
+        {
+            path:'/MemberList',
+            component:()=>import('../views/MemberShip/MemberList.vue'),
+            meta:{title:'会员列表'}
+        },
+        {
         path: '/home',
         redirect: '/dashboard',
         component: () => import('../views/Home.vue'),
@@ -32,6 +47,31 @@ const router = createRouter({
             },
         ]
     }, {
+            path: '/home',
+            redirect: '/coupon',
+            component: () => import('../views/Home.vue'),
+            children: [
+                {
+                    path: '/coupon',
+                    name: 'CouponList',
+                    component: () => import('../views/Coupon/CouponList.vue'),
+                    meta: { title: '优惠券列表' }
+                }
+            ]
+        },{
+            path: '/home',
+            redirect: '/couponedit',
+            component: () => import('../views/Home.vue'),
+            children: [
+                {
+                    path: '/couponedit',
+                    name: 'CouponEdit',
+                    component: () => import('../views/Coupon/CouponEdit.vue'),
+                    meta: { title: '添加优惠卷' }
+                }
+            ]
+        },
+        {
         path: '/home',
         redirect: '/mainpage',
         component: () => import('../views/Home.vue'),
@@ -72,6 +112,18 @@ const router = createRouter({
             path: '/order',
             name: 'Order',
             component: Order
+        },
+        {
+            path: '/orderHistory',
+            name: 'OrderHistory',
+            component: OrderHistory,
+            meta: {title: '历史订单'}
+        },
+        {
+            path: '/order/:id',
+            name: 'OrderDetail',
+            component: () => import("../views/Order/OrderDetail.vue"),
+            meta: {title: '订单详情'}
         },
         {
         path: '/404',

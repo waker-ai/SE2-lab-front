@@ -2,8 +2,9 @@
 import {router} from '../router'
 // import {parseRole} from "../utils"
 import {User, SwitchButton, House} from "@element-plus/icons-vue"   //图标
-
-// const role = sessionStorage.getItem('role')    //登录的时候插入的
+import { Tickets } from "@element-plus/icons-vue"
+import { Plus } from "@element-plus/icons-vue"
+const role = sessionStorage.getItem('role')    //登录的时候插入的
 
 //退出登录
 function logout() {
@@ -43,6 +44,21 @@ function logout() {
       </el-col>
 
       <el-col :span="15">
+      </el-col>
+      <el-col :span="1" class="header-icon">
+        <router-link
+            v-if="role === 'CUSTOMER'"
+            to="/coupon"
+            v-slot="{ navigate }">
+          <el-icon @click="navigate" :size="35" color="white"><Tickets /></el-icon>
+        </router-link>
+
+        <router-link
+            v-else-if="role === 'ADMINISTRATOR'"
+            to="/couponedit"
+            v-slot="{ navigate }">
+          <el-icon @click="navigate" :size="35" color="white"><Plus /></el-icon>
+        </router-link>
       </el-col>
 
       <el-col :span="1" class="header-icon">

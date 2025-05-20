@@ -50,3 +50,43 @@ export const initiatePayment = (orderId: string) => {
 export const handlePaymentNotification = (notificationData: PaymentNotification) => {
     return axios.post('/api/orders/notify', notificationData)
 }
+
+export interface OrderVO {
+    orderId: number;
+    userId: number;
+    totalAmount: number;
+    paymentMethod: string;
+    orderStatus: string;
+    createTime: string;
+}
+
+export const getHistoryOrders = () => {
+    return axios.get<{
+        code: string;
+        data: OrderVO[];
+        msg: string | null;
+    }>('api/orders/history')
+}
+
+export interface OrderDetailVO {
+    orderId: number
+    createTime: string
+    paymentMethod: string
+    status: string
+    receiverName: string
+    receiverPhone: string
+    items: {
+        productId: number
+        productName: string
+        quantity: number
+        price: number
+    }[]
+}
+
+export const getOrderDetail = (orderId: number) => {
+    return axios.get<{
+        code: string;
+        data: OrderDetailVO;
+        msg: string | null;
+    }>(`/api/orders/${orderId}`)
+}

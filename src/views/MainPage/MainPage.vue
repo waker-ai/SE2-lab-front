@@ -32,6 +32,25 @@ const fetchBooks = async () => {
   }
 }
 
+const categories=[
+  {label:'全部',value:'ALL'},
+  {label:'文学',value:'LITERATURE'},
+  {label:'科技',value: 'TECH'},
+  {label:'儿童',value: 'CHILDREN'},
+  {label:'艺术',value:'ART'}
+]
+
+const selectedCategory=ref('ALL')
+
+
+const filteredBooks=computed(()=>{
+  if(selectedCategory.value==='ALL'){
+    return books.value
+}else{
+  return books.value.filter(book=>book.category===selectedCategory.value)
+  }
+})
+
 // 组件加载时获取书籍
 onMounted(fetchBooks)
 // 新增：获取广告数据
@@ -77,8 +96,8 @@ const goToAdvertisementList = () => {
   <el-main class="books-container">
     <!-- 新增：广告展示模块 -->
     <el-carousel :interval="5000" arrow="always">
-      <el-carousel-item v-for="ad in advertisements" :key="ad.id">
-        <el-image :src="ad.imgUrl" fit="cover" style="width: 100%; height: 200px;" />
+      <el-carousel-item v-for="ad in advertisements" :key="ad.id"  class="carousel-item">
+        <el-image :src="ad.imgUrl" fit="contain" class="carousel-image"/>
       </el-carousel-item>
     </el-carousel>
 
@@ -106,15 +125,35 @@ const goToAdvertisementList = () => {
       </div>
     </div>
 
-    <!--商品列表-->
-    <el-row :gutter="20" class="product-item-list">
-      <el-col v-for="book in books" :key="book.id" :span="6">
-        <el-card shadow="hover" class="book-card" @click="goToDetail(book.id!)">
-          <img :src="book.cover" class="book-cover" />
-          <div class="book-title">{{ book.title }}</div>
-          <div class="book-price">￥{{book.price}}</div>
-          <div class="book-rate">评分：{{book.rate}}</div>
-        </el-card>
+    <el-row :gutter="20">
+      <!-- 左边主内容（书籍和广告） -->
+      <el-col :span="20">
+        <!-- 广告轮播、操作按钮、书籍列表（原内容保留） -->
+        <!-- ... 原来的模板代码 ... -->
+        <el-row :gutter="20" class="product-item-list">
+          <el-col v-for="book in filteredBooks" :key="book.id" :span="6">
+            <el-card shadow="hover" class="book-card" @click="goToDetail(book.id!)">
+              <img :src="book.cover" class="book-cover" />
+              <div class="book-title">{{ book.title }}</div>
+              <div class="book-price">￥{{book.price}}</div>
+              <div class="book-rate">评分：{{book.rate}}</div>
+            </el-card>
+          </el-col>
+        </el-row>
+      </el-col>
+
+      <!-- 右边分类栏 -->
+      <el-col :span="4">
+        <div class="category-sidebar">
+          <div
+              v-for="cat in categories"
+              :key="cat.value"
+              :class="['category-item', { active: selectedCategory === cat.value }]"
+              @click="selectedCategory = cat.value"
+          >
+            {{ cat.label }}
+          </div>
+        </div>
       </el-col>
     </el-row>
   </el-main>
@@ -148,4 +187,46 @@ const goToAdvertisementList = () => {
   font-size: 18px;
   font-weight: bold;
 }
+
+.category-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-left: 1px solid #ddd;
+  align-items: center;
+}
+
+.category-item {
+  width: 40px;
+  padding: 6px 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.3s, background-color 0.3s;
+  text-align: center;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.category-item:hover {
+  border-color: #409EFF;
+  background-color: #f0f9ff;
+}
+
+.category-item.active {
+  border-color: #409EFF;
+  background-color: #ecf5ff;
+  font-weight: bold;
+}
+
+.carousel-item {
+  height: 200px;
+}
+
+.carousel-image {
+  width: 100%;
+  height: 100%;
+  background-color: #f5f7fa;
+}
+
 </style>

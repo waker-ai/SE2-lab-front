@@ -6,6 +6,7 @@ import {router} from '../../router'
 import {UserFilled, UploadFilled} from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { onMounted } from 'vue'
+import {checkMember} from "../../api/membership.ts";
 
 
 const username = ref('')
@@ -29,6 +30,7 @@ const newEmail = ref('')
 const newLocation = ref('')
 
 const displayInfoCard = ref(false)
+const isMember = ref(false)
 
 // 电话号码的规则
 const chinaMobileRegex = /^1(3[0-9]|4[579]|5[0-35-9]|6[2567]|7[0-8]|8[0-9]|9[189])\d{8}$/
@@ -67,7 +69,18 @@ function getUserInfo() {
     email.value = res.data.data.email
     location.value = res.data.data.location
     newUsername.value = res.data.data.username
+     checkMemberStatus(username.value)
   })
+}
+async function checkMemberStatus(username: string) {
+  try {
+    const response = await checkMember(username)
+    isMember.value = response.data.data
+    console.log('返回值',response.data)
+    console.log('isMember', isMember.value)
+  } catch (error) {
+    console.error('检查会员状态失败:', error)
+  }
 }
 
 function updateInfo() {
@@ -161,6 +174,23 @@ function uploadHttpRequest() {
   return new XMLHttpRequest()
 }
 
+function goToMemberList() {
+  router.push('/MemberList')
+}
+
+function goToMemberCharge() {
+  router.push('/MemberCharge')
+}
+
+function goToMemberDetail() {
+  router.push('/MemberDetail')
+}
+
+function goToOrderHistory() {
+  router.push({ path: '/orderHistory' })
+}
+
+
 </script>
 
 
@@ -210,6 +240,12 @@ function uploadHttpRequest() {
         </el-descriptions-item>
 
       </el-descriptions>
+
+      <el-divider>
+        <el-button type="primary" @click="goToOrderHistory">
+          我的订单
+        </el-button>
+      </el-divider>
     </el-card>
 
     <el-card v-if="displayInfoCard" class="change-card">
@@ -277,6 +313,18 @@ function uploadHttpRequest() {
         </el-form-item>
       </el-form>
     </el-card>
+
+    <div class="membership-section">
+      <el-button v-if="role === 'ADMINISTRATOR'" type="primary" @click="goToMemberList">
+        查看会员列表
+      </el-button>
+      <el-button v-else-if="!isMember" type="primary" @click="goToMemberCharge">
+        充值会员
+      </el-button>
+      <el-button v-else type="primary" @click="goToMemberDetail">
+        查看会员详情
+      </el-button>
+    </div>
 
     <el-card v-if="!displayInfoCard" class="change-card">
       <template #header>

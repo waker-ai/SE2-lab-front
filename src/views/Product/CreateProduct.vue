@@ -93,6 +93,7 @@ const handleSubmit = async () => {
   const payload = {
     title: name.value,
     price: price.value,
+    category: category.value,
     description: description.value,
     cover: coverUrl.value,
     detail:description.value,

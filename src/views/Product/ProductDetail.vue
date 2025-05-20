@@ -31,6 +31,12 @@ const fetchProduct = async () => {
     loading.value = false
   }
 }
+const categoryMap : Record<string, string>={
+  'LITERATURE':'文学',
+  'TECH':'科技',
+  'CHILDREN':'儿童',
+  'ART':'艺术',
+}
 
 onMounted(fetchProduct)
 //模拟加入购物车
@@ -76,6 +82,7 @@ const addProductToCart=async()=>{
         <el-image :src="product.cover" class="cover" fit="cover"/>
         <div class="info">
           <h2>{{ product.title }}</h2>
+          <p> 分类：<strong>{{ categoryMap[product.category] || '未分类' }}</strong></p>
           <p class="price">价格：<span>¥{{ product.price }}</span></p>
           <p>评分：<el-rate v-model="product.rate" disabled /></p>
           <p>库存：<strong>{{ product.stockAmount || '暂无库存信息' }}</strong></p> <!-- 库存数量 -->
