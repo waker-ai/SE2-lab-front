@@ -4,9 +4,13 @@ import {router} from '../router'
 import {User, SwitchButton, House} from "@element-plus/icons-vue"   //图标
 import { Tickets } from "@element-plus/icons-vue"
 import { Plus } from "@element-plus/icons-vue"
+
+import {Search} from "@element-plus/icons-vue";
+
 const role = sessionStorage.getItem('role')    //登录的时候插入的
 
 //退出登录
+
 function logout() {
   ElMessageBox.confirm(
       '是否要退出登录？',
@@ -43,7 +47,7 @@ function logout() {
         <!--        <el-tag class="role-tag" size="large">{{ parseRole(role) }}版</el-tag>-->
       </el-col>
 
-      <el-col :span="15">
+      <el-col :span="13">
       </el-col>
       <el-col :span="1" class="header-icon">
         <router-link
@@ -58,6 +62,12 @@ function logout() {
             to="/couponedit"
             v-slot="{ navigate }">
           <el-icon @click="navigate" :size="35" color="white"><Plus /></el-icon>
+        </router-link>
+      </el-col>
+
+      <el-col :span="1" class="header-icon">
+        <router-link to="/search" v-slot="{navigate}">
+          <el-icon @click="navigate" :size="35" color="white"><Search /></el-icon>
         </router-link>
       </el-col>
 

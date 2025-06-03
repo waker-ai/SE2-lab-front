@@ -1,232 +1,415 @@
+<template>
+  <el-main class="main-wrapper">
+    <!-- 广告轮播 -->
+    <div class="carousel-container">
+      <el-carousel :interval="5000" arrow="always" height="400px">
+        <el-carousel-item v-for="ad in advertisements" :key="ad.id">
+          <el-image :src="ad.imgUrl" fit="contain" class="carousel-image" />
+        </el-carousel-item>
+      </el-carousel>
+    </div>
+
+    <!-- 操作按钮区域 -->
+    <div class="action-bar">
+      <!-- 管理员操作按钮 -->
+      <div class="admin-bar" v-if="isAdmin">
+        <el-button class="action-btn" @click="goToCreateAdvertisement">
+          <i class="fas fa-plus-circle"></i> 新增广告
+        </el-button>
+        <el-button class="action-btn" @click="goToAdvertisementList">
+          <i class="fas fa-list"></i> 广告列表
+        </el-button>
+        <el-button class="action-btn" @click="goToCreate">
+          <i class="fas fa-book-medical"></i> 创建书籍
+        </el-button>
+        <el-button class="action-btn" type="danger" @click="goToManage">
+          <i class="fas fa-cog"></i> 管理商品
+        </el-button>
+
+
+      </div>
+
+      <!-- 用户操作按钮 -->
+      <el-button class="action-btn" @click="goToHotProducts">
+        <i class="fas fa-hot-books"></i> 热门书籍
+      </el-button>
+      <div class="user-bar">
+        <el-button class="action-btn" type="primary" @click="goToCart">
+          <i class="fas fa-shopping-cart"></i> 购物车
+        </el-button>
+      </div>
+    </div>
+
+    <!-- 分类标签 -->
+    <div class="category-tags">
+      <div
+          v-for="cat in categories"
+          :key="cat.value"
+          :class="['tag', { active: selectedCategory === cat.value }]"
+          @click="selectedCategory = cat.value"
+      >
+        {{ cat.label }}
+      </div>
+    </div>
+
+    <!-- 商品展示区 -->
+    <div class="book-grid">
+      <el-card
+          v-for="book in filteredBooks"
+          :key="book.id"
+          class="book-card"
+          shadow="hover"
+          @click="goToDetail(book.id)"
+      >
+        <img :src="book.cover" class="book-cover" />
+        <div class="book-info">
+          <div class="book-title">{{ book.title }}</div>
+          <div class="book-price">￥{{ book.price }}</div>
+          <div class="book-rate" v-if="book.rate !== undefined">
+            评分：{{ book.rate.toFixed(2) }}
+          </div>
+          <div class="book-rate" v-else>
+            暂无评分
+          </div>
+        </div>
+      </el-card>
+    </div>
+  </el-main>
+</template>
+
 <script setup lang="ts">
-import { ref, onMounted,computed} from 'vue'
-import {useRouter} from 'vue-router'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { getProductList, Product } from '../../api/product'
-import {getAdvertisements,Advertisement} from "../../api/advertisement.ts";
+import { getAdvertisements, Advertisement } from "../../api/advertisement.ts"
+import { ElMessage } from 'element-plus'
 
-// 存储书籍列表
 const books = ref<Product[]>([])
-// 存储广告列表
-const advertisements = ref<Advertisement[]>([]) // 新增
-
-// 获取路由实例
+const advertisements = ref<Advertisement[]>([])
 const router = useRouter()
+const userRole = ref(sessionStorage.getItem('role'))
+const isAdmin = computed(() => userRole.value === 'ADMINISTRATOR')
 
-// 获取用户身份
-const userRole = ref(sessionStorage.getItem('role')) // 从 sessionStorage 获取角色
-// const isAdmin = computed(() => userRole.value === 'ADMINISTRATOR') // 判断是否是管理员
-const isAdmin = computed(() => {
-  console.log('当前 userRole.value:', userRole.value)
-  return userRole.value === 'ADMINISTRATOR'
-})
-
-
-// 获取书籍数据
 const fetchBooks = async () => {
   try {
     const response = await getProductList()
-    console.log(response.data)
     books.value = response.data.data
   } catch (error) {
     console.error('获取书籍失败:', error)
+    ElMessage.error('获取书籍数据失败')
   }
 }
 
-const categories=[
-  {label:'全部',value:'ALL'},
-  {label:'文学',value:'LITERATURE'},
-  {label:'科技',value: 'TECH'},
-  {label:'儿童',value: 'CHILDREN'},
-  {label:'艺术',value:'ART'}
-]
-
-const selectedCategory=ref('ALL')
-
-
-const filteredBooks=computed(()=>{
-  if(selectedCategory.value==='ALL'){
-    return books.value
-}else{
-  return books.value.filter(book=>book.category===selectedCategory.value)
-  }
-})
-
-// 组件加载时获取书籍
-onMounted(fetchBooks)
-// 新增：获取广告数据
 const fetchAdvertisements = async () => {
   try {
     const res = await getAdvertisements()
     advertisements.value = res.data
   } catch (error) {
     console.error('获取广告失败:', error)
+    ElMessage.error('获取广告数据失败')
   }
 }
-// 组件加载时获取书籍和广告
-onMounted(async () => {
-  await fetchAdvertisements() // 新增
+
+const categories = [
+  { label: '全部', value: 'ALL' },
+  { label: '文学', value: 'LITERATURE' },
+  { label: '科技', value: 'TECH' },
+  { label: '儿童', value: 'CHILDREN' },
+  { label: '艺术', value: 'ART' },
+  { label: '历史', value: 'HISTORY' },
+  { label: '小说', value: 'FICTION' }
+]
+
+const selectedCategory = ref('ALL')
+
+const filteredBooks = computed(() => {
+  if (selectedCategory.value === 'ALL') {
+    return books.value
+  } else {
+    return books.value.filter(book => book.category === selectedCategory.value)
+  }
 })
 
-const goToDetail=(id:number)=>{
-  router.push(`/products/${id}`)
-}
+onMounted(() => {
+  fetchBooks()
+  fetchAdvertisements()
+})
 
-const goToManage=()=>{
-  router.push('/admin/products')
-}
-
-const goToCreate=()=>{
-  router.push('/createproduct')
-}
-const goToCart=()=>{
-  router.push('/cart')
-}
-// 新增：前往新增广告页面
-const goToCreateAdvertisement = () => {
-  router.push('/advertisement/edit')
-}
-
-// 新增：前往广告列表页面
-const goToAdvertisementList = () => {
-  router.push('/advertisement')
-}
+const goToDetail = (id: number) => router.push(`/products/${id}`)
+const goToManage = () => router.push('/admin/products')
+const goToCreate = () => router.push('/createproduct')
+const goToHotProducts = () => router.push('/HotProductsList')
+const goToCart = () => router.push('/cart')
+const goToCreateAdvertisement = () => router.push('/advertisement/edit')
+const goToAdvertisementList = () => router.push('/advertisement')
 </script>
 
-<template>
-  <el-main class="books-container">
-    <!-- 新增：广告展示模块 -->
-    <el-carousel :interval="5000" arrow="always">
-      <el-carousel-item v-for="ad in advertisements" :key="ad.id"  class="carousel-item">
-        <el-image :src="ad.imgUrl" fit="contain" class="carousel-image"/>
-      </el-carousel-item>
-    </el-carousel>
-
-    <div class="user-actions">
-      <!-- 新增：新增广告和广告列表按钮 -->
-      <el-button v-if="isAdmin" type="primary" @click="goToCreateAdvertisement">
-        新增广告
-      </el-button>
-      <el-button v-if="isAdmin" type="primary" @click="goToAdvertisementList">
-        广告列表
-      </el-button>
-    </div>
-
-    <div class="header">
-      <h1>书籍展示</h1>
-      <div class="user-actions">
-        <el-button type="primary" @click="goToCart" icon="ShoppingCart">
-          购物车
-        </el-button>
-      </div>
-      <!--仅管理员可见-->
-      <div class="admin-actions">
-        <el-button v-if="isAdmin" type="primary" @click="goToCreate">创建书籍</el-button>
-        <el-button v-if="isAdmin" type="danger" @click="goToManage">管理商品</el-button>
-      </div>
-    </div>
-
-    <el-row :gutter="20">
-      <!-- 左边主内容（书籍和广告） -->
-      <el-col :span="20">
-        <!-- 广告轮播、操作按钮、书籍列表（原内容保留） -->
-        <!-- ... 原来的模板代码 ... -->
-        <el-row :gutter="20" class="product-item-list">
-          <el-col v-for="book in filteredBooks" :key="book.id" :span="6">
-            <el-card shadow="hover" class="book-card" @click="goToDetail(book.id!)">
-              <img :src="book.cover" class="book-cover" />
-              <div class="book-title">{{ book.title }}</div>
-              <div class="book-price">￥{{book.price}}</div>
-              <div class="book-rate">评分：{{book.rate}}</div>
-            </el-card>
-          </el-col>
-        </el-row>
-      </el-col>
-
-      <!-- 右边分类栏 -->
-      <el-col :span="4">
-        <div class="category-sidebar">
-          <div
-              v-for="cat in categories"
-              :key="cat.value"
-              :class="['category-item', { active: selectedCategory === cat.value }]"
-              @click="selectedCategory = cat.value"
-          >
-            {{ cat.label }}
-          </div>
-        </div>
-      </el-col>
-    </el-row>
-  </el-main>
-</template>
-
 <style scoped>
-.books-container {
-  padding: 20px;
-  text-align: center;
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+:root {
+  --primary: #3498db;
+  --secondary: #2ecc71;
+  --accent: #e74c3c;
+  --light: #f8f9fa;
+  --dark: #343a40;
+  --gray: #6c757d;
+  --light-gray: #e9ecef;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --transition: all 0.3s ease;
 }
 
-.book-card {
-  text-align: center;
-  padding: 10px;
-  cursor:pointer;
+body {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7f1 100%);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  color: var(--dark);
 }
 
-.book-card{
-  transform: scale(1.05);
-  transition: 0.3s ease-in-out;
-}
-
-.book-cover {
+.main-wrapper {
+  background-color: #fff;
+  padding: 30px 60px;
+  margin: 0 auto;
+  /* 删除 max-width */
+  /* max-width: 1280px; */
+  box-sizing: border-box;
   width: 100%;
-  height: 200px;
-  object-fit: cover;
 }
 
-.book-title {
-  margin-top: 10px;
-  font-size: 18px;
-  font-weight: bold;
-}
+/* 轮播图样式 */
+.carousel-container {
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 40px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 
-.category-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px;
-  border-left: 1px solid #ddd;
-  align-items: center;
-}
-
-.category-item {
-  width: 40px;
-  padding: 6px 4px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: border-color 0.3s, background-color 0.3s;
-  text-align: center;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.category-item:hover {
-  border-color: #409EFF;
-  background-color: #f0f9ff;
-}
-
-.category-item.active {
-  border-color: #409EFF;
-  background-color: #ecf5ff;
-  font-weight: bold;
-}
-
-.carousel-item {
-  height: 200px;
+  /* 新增宽度控制 */
+  max-width: 730px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .carousel-image {
   width: 100%;
   height: 100%;
-  background-color: #f5f7fa;
+  object-fit: cover;
+  transition: transform 0.5s ease;
 }
 
+.carousel-container:hover .carousel-image {
+  transform: scale(1.03);
+}
+
+/* 操作按钮区域 */
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  margin: 30px 0;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.admin-bar, .user-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.action-btn {
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.action-btn i {
+  margin-right: 8px;
+}
+
+.action-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 分类标签 */
+.category-tags {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 30px 0;
+}
+
+.tag {
+  padding: 10px 24px;
+  font-size: 16px;
+  border-radius: 30px;
+  border: 1px solid var(--light-gray);
+  background-color: #fff;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tag:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.tag.active {
+  background: linear-gradient(135deg, var(--primary), #4a69bd);
+  color: #222;
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+/* 商品网格 */
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  margin-top: 20px;
+}
+
+.book-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: var(--transition);
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: none;
+}
+
+.book-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+}
+
+.book-cover {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  border-bottom: 1px solid var(--light-gray);
+}
+
+.book-info {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.book-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  line-height: 1.4;
+  min-height: 50px;
+}
+
+.book-price {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 22px;
+  margin: 10px 0;
+}
+
+.book-rate {
+  margin: 10px 0;
+}
+
+.book-actions {
+  margin-top: auto;
+  padding-top: 15px;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .main-wrapper {
+    padding: 25px;
+  }
+
+  .book-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 25px;
+  }
+}
+
+@media (max-width: 992px) {
+  .carousel-container {
+    margin-bottom: 30px;
+  }
+
+  .action-bar {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .admin-bar, .user-bar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .category-tags {
+    gap: 12px;
+  }
+
+  .tag {
+    padding: 8px 20px;
+    font-size: 15px;
+  }
+
+  .book-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-wrapper {
+    padding: 20px;
+    margin: 10px;
+  }
+
+  .carousel-container {
+    border-radius: 12px;
+  }
+
+  .action-btn {
+    padding: 10px 18px;
+    font-size: 14px;
+  }
+
+  .book-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .book-cover {
+    height: 280px;
+  }
+}
+
+@media (max-width: 576px) {
+  .main-wrapper {
+    padding: 15px;
+  }
+
+  .book-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .book-cover {
+    height: 350px;
+  }
+
+  .tag {
+    padding: 6px 15px;
+    font-size: 14px;
+  }
+}
 </style>

@@ -189,6 +189,9 @@ function goToMemberDetail() {
 function goToOrderHistory() {
   router.push({ path: '/orderHistory' })
 }
+function goToAddressManager() {
+  router.push({ path: '/addressManager' })
+}
 
 
 </script>
@@ -246,7 +249,14 @@ function goToOrderHistory() {
           我的订单
         </el-button>
       </el-divider>
+
+      <div style="display: flex; justify-content: center; margin-top: 10px;">
+        <el-button type="success" @click="goToAddressManager">
+          管理收货地址
+        </el-button>
+      </div>
     </el-card>
+
 
     <el-card v-if="displayInfoCard" class="change-card">
       <template #header>

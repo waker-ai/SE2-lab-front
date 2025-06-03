@@ -37,3 +37,7 @@ export const getProductStock = (id: number) => axios.get(`/api/products/stockpil
 export function adjustStock(productId: number, amount: number) {
     return axios.patch(`/api/products/stockpile/${productId}?amount=${amount}`)
 }
+
+export const getProductReviews = async (productId : number) => {
+    return axios.get(`/api/reviews/${productId}`)
+}

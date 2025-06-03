@@ -80,6 +80,7 @@ export interface OrderDetailVO {
         productName: string
         quantity: number
         price: number
+        reviewed: boolean
     }[]
 }
 

@@ -126,6 +126,12 @@ const router = createRouter({
             meta: {title: '订单详情'}
         },
         {
+            path: '/review',
+            name: 'ReviewPage',
+            component: () => import('../views/Product/ReviewPage.vue'),
+            meta: { title: '商品评价' }
+        },
+        {
         path: '/404',
         name: '404',
         component: () => import('../views/NotFound.vue'),
@@ -139,10 +145,27 @@ const router = createRouter({
             component: AdvertisementList
         },
         {
+            path:'/HotProductsList',
+            name:'HotProductsList',
+            component:()=>import('../views/HotProducts/HotProductsList.vue'),
+            meta:{title:'热销商品'}
+        },
+        {
             path: '/advertisement/edit',
             name: 'AdvertisementEdit',
             component: AdvertisementEdit
-        },]
+        },{
+            path: '/addressManager',
+            name: 'addressManager',
+            component: () => import("../views/Address/AddressManager.vue"),
+            meta: {title: '管理收货地址'}
+        },
+        {
+        path :'/search',
+        name:'SearchResult',
+        component:()=>import('../views/Search/SearchResult.vue'),
+        }
+    ]
 })
 
 router.beforeEach((to, _, next) => {
