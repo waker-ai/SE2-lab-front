@@ -3,24 +3,20 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getAdvertisements, createAdvertisement, updateAdvertisement } from "../../api/advertisement.ts";
-import { getProductList } from "../../api/product"; // 引入获取商品列表的 API
-import { UploadFilled } from '@element-plus/icons-vue'
+import { getProductList } from "../../api/product";
+import { UploadFilled, ArrowLeft } from '@element-plus/icons-vue'
 import { API_MODULE } from "../../api/_prefix.ts";
 
-// 定义广告项的类型
 interface AdvertisementItem {
   id: number;
   title: string;
   content: string;
   imgUrl: string;
   productId: string;
-  // 可以根据实际情况添加更多属性
 }
 
-// 定义商品项的类型
 interface ProductItem {
   id: number;
-  // 可以根据实际情况添加更多属性
 }
 
 const route = useRoute()
@@ -33,22 +29,18 @@ const form = ref({
 })
 
 const imageFileList = ref([])
-// 指定 products 的类型
 const products = ref<ProductItem[]>([])
 
-// 图片上传
 const handleUploadChange = async (file: any) => {
   try {
-    // 本地预览
     if (file.raw) {
       const reader = new FileReader()
       reader.onload = (e) => {
-        form.value.imgUrl = e.target?.result as string // 临时预览
+        form.value.imgUrl = e.target?.result as string
       }
       reader.readAsDataURL(file.raw)
     }
 
-    // 获取签名
     const signRes = await fetch(`${API_MODULE}/oss/signature`)
     if (!signRes.ok) {
       ElMessage.error('获取签名失败')
@@ -74,7 +66,6 @@ const handleUploadChange = async (file: any) => {
       return
     }
 
-    // 设置封面 URL 为 OSS 上的地址
     form.value.imgUrl = `${signData.host}/${filename}`
     ElMessage.success('封面上传成功')
   } catch (error: any) {
@@ -88,14 +79,12 @@ const id = route.query.id ? Number(route.query.id) : undefined
 
 const fetchDetail = async () => {
   const res = await getAdvertisements()
-  // 显式指定 item 的类型
   const ad = res.data.find((item: AdvertisementItem) => item.id == id)
   if (ad) {
     form.value = { ...ad }
   }
 }
 
-// 获取商品列表
 const fetchProducts = async () => {
   try {
     const response = await getProductList()
@@ -105,13 +94,11 @@ const fetchProducts = async () => {
   }
 }
 
-// 检查 productId 是否存在于商品列表中
 const isProductIdValid = computed(() => {
   if (!form.value.productId) return false
-  return products.value.some((product: ProductItem) => product.id.toString() === form.value.productId)
+  return products.value.some(product => product.id.toString() === form.value.productId)
 })
 
-// 表单验证
 const isValid = computed(() => {
   return (
       form.value.title.trim() !== '' &&
@@ -131,7 +118,7 @@ const save = async () => {
     return
   }
   if (id) {
-    await updateAdvertisement({ ...form.value, productId: parseInt(form.value.productId)})
+    await updateAdvertisement({ ...form.value, productId: parseInt(form.value.productId) })
     ElMessage.success('更新成功')
   } else {
     await createAdvertisement(form.value)
@@ -141,22 +128,23 @@ const save = async () => {
 }
 
 const goBack = () => {
-  router.back()
+  router.push('/mainpage')
 }
 
 onMounted(async () => {
   if (id) {
     fetchDetail()
   }
-  await fetchProducts() // 初始化时获取商品列表
+  await fetchProducts()
 })
 </script>
 
 <template>
-  <div class="p-4">
-    <el-page-header @back="goBack" content="广告编辑" />
+  <div class="advertisement-edit-panel">
+    <h2 class="page-title">{{ id ? '编辑广告' : '新增广告' }}</h2>
+    <hr class="section-divider" />
 
-    <el-form :model="form" label-width="80px" style="margin-top: 16px;">
+    <el-form :model="form" label-width="80px" class="form-container">
       <el-form-item label="标题">
         <el-input v-model="form.title" />
       </el-form-item>
@@ -170,14 +158,7 @@ onMounted(async () => {
             :show-file-list="false"
             :http-request="() => {}"
             accept="image/*"
-            :before-upload="(file: File) => {
-              // 直接返回判断结果，避免未使用变量
-              if (!file.type.startsWith('image/')) {
-                ElMessage.error('只能上传图片文件');
-                return false;
-              }
-              return true;
-            }"
+            :before-upload="(file: File) => file.type.startsWith('image/') || (ElMessage.error('只能上传图片文件'), false)"
         >
           <el-button type="primary" plain>
             <el-icon><UploadFilled /></el-icon>
@@ -201,3 +182,32 @@ onMounted(async () => {
     </el-form>
   </div>
 </template>
+
+<style scoped>
+.advertisement-edit-panel {
+  padding: 40px 60px;
+  background: #f5f7fa;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.section-divider {
+  border: none;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 24px;
+}
+
+.form-container {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+</style>

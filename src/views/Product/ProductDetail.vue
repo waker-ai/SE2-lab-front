@@ -4,6 +4,8 @@ import { getProductDetail, Product, updateProduct, getProductReviews } from '../
 import { useRoute } from 'vue-router'
 import { addToCart } from '../../api/cart'
 import { ElMessage } from 'element-plus'
+import {Back} from "@element-plus/icons-vue";
+import {router} from "../../router";
 
 // 评论加载
 const reviews = ref<any[]>([])
@@ -113,9 +115,19 @@ const addProductToCart = async () => {
     ElMessage.error('无效的商品ID')
   }
 }
+
+// 返回处理
+const handleBack = () => {
+  router.push(`/mainpage`)
+}
 </script>
 
 <template>
+  <!-- 返回按钮 -->
+  <el-button @click="handleBack" type="primary" circle plain>
+    <el-icon><Back /></el-icon>
+  </el-button>
+
   <el-card v-if="loading" class="loading-card el-card">
     <el-skeleton animated :rows="6" />
   </el-card>

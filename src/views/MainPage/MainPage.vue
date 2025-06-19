@@ -275,17 +275,16 @@ body {
   background: white;
   border-radius: 16px;
   overflow: hidden;
-  transition: var(--transition);
   cursor: pointer;
   height: 100%;
-  display: flex;
+  position: relative;
+  transition: transform 0.3s;
   flex-direction: column;
   border: none;
 }
 
 .book-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+  transform: translateY(-5px);
 }
 
 .book-cover {

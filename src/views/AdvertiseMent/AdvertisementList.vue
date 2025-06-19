@@ -4,6 +4,7 @@ import { Edit, Delete } from "@element-plus/icons-vue"
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElLoading } from 'element-plus'
 import { getAdvertisements, deleteAdvertisement } from "../../api/advertisement.ts"
+import { ArrowLeft, CirclePlus } from '@element-plus/icons-vue'
 
 // 定义广告项类型
 interface AdvertisementItem {
@@ -76,60 +77,177 @@ watch(() => route.path, (newPath) => {
 </script>
 
 <template>
-  <div class="p-4">
-    <div class="header-actions">
-      <el-button type="success" @click="router.push('/mainpage')">
-        返回商品页面
+  <div class="advertisement-panel">
+    <h2 class="page-title">广告管理中心</h2>
+    <hr class="section-divider" />
+
+    <div class="button-group">
+      <el-button class="action-button secondary" :icon="ArrowLeft" @click="router.push('/mainpage')">
+        返回
       </el-button>
-      <el-button type="primary" @click="router.push('/advertisement/edit')">
+      <el-button class="action-button primary" :icon="CirclePlus" @click="router.push('/advertisement/edit')">
         新增广告
       </el-button>
     </div>
 
-    <el-table :data="advertisements" v-loading="loading">
-      <el-table-column prop="id" label="ID" width="60" />
-      <el-table-column prop="title" label="标题" />
-      <el-table-column prop="content" label="内容" />
-      <el-table-column label="图片">
-        <template #default="{ row }">
-          <el-image
-              :src="row.imgUrl"
-              fit="cover"
-              style="width: 150px; height: 100px"
-              :preview-src-list="[row.imgUrl]"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column prop="productId" label="商品ID" />
-      <el-table-column label="操作" width="120">
-        <template #default="{ row }">
-          <el-button
-              type="primary"
-              :icon="Edit"
-              circle
-              @click="handleEdit(row.id)"
-          />
-          <el-button
-              type="danger"
-              :icon="Delete"
-              circle
-              @click="handleDelete(row.id)"
-          />
-        </template>
-      </el-table-column>
-    </el-table>
+    <div class="ad-list">
+      <div class="ad-card" v-for="ad in advertisements" :key="ad.id">
+        <div class="ad-card-left">
+          <img :src="ad.imgUrl" alt="广告图" class="ad-image" />
+        </div>
+        <div class="ad-card-right">
+          <div class="ad-info">
+            <h3 class="ad-title">{{ ad.title }}</h3>
+            <p class="ad-content">{{ ad.content }}</p>
+            <p class="ad-product-id">关联商品ID：{{ ad.productId }}</p>
+          </div>
+          <div class="ad-actions">
+            <el-button circle :icon="Edit" @click="handleEdit(ad.id)" />
+            <el-button circle type="danger" :icon="Delete" @click="handleDelete(ad.id)" />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.header-actions {
-  margin-bottom: 20px;
-  display: flex;
-  gap: 10px;
+.advertisement-panel {
+  padding: 40px 60px;
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f7fa;
+  box-sizing: border-box;
 }
 
-.el-image {
-  border-radius: 4px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.section-divider {
+  border: none;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 24px;
+}
+
+.button-group {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 36px; /* 🚨 加大间距，防止 hover 时遮挡按钮 */
+  z-index: 2;
+  position: relative;
+}
+.header-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+
+.action-button.primary {
+  background: linear-gradient(to right, #4CAF50, #66BB6A);
+  color: white;
+}
+.action-button.primary:hover {
+  background: linear-gradient(to right, #43A047, #4CAF50);
+  box-shadow: 0 4px 10px rgba(76, 175, 80, 0.4);
+}
+
+.action-button.secondary {
+  background-color: #e0e7f0;
+  color: #374151;
+}
+.action-button.secondary:hover {
+  background-color: #d4dce6;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+.ad-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+  gap: 24px;
+}
+
+.ad-card {
+  background: #ffffff;
+  border-radius: 12px;
+  display: flex;
+  padding: 20px;
+  gap: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ad-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.ad-card-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ad-image {
+  width: 100%;
+  max-height: 260px;
+  object-fit: contain;
+  border-radius: 8px;
+  background-color: #f0f0f0;
+}
+
+.ad-card-right {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ad-info {
+  margin-bottom: 12px;
+}
+
+.ad-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #222;
+}
+
+.ad-content {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.ad-product-id {
+  font-size: 13px;
+  color: #999;
+}
+
+.ad-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 </style>
+

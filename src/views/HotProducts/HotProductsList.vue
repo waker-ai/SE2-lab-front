@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { getProductsBySales, getProductsByScore } from '../../api/products_list.ts'
 import { useRouter } from 'vue-router'
+import {Back} from "@element-plus/icons-vue";
 const router = useRouter()
 interface Product{
   id: number;
@@ -55,11 +56,22 @@ const goToProductDetail = (productId: number) => {
   router.push(`/products/${productId}`)
 }
 
+// 返回处理
+const handleBack = () => {
+  router.push(`/mainpage`)
+}
 
 onMounted(fetchProducts)
+
 </script>
 
 <template>
+
+  <!-- 返回按钮 -->
+  <el-button @click="handleBack" type="primary" circle plain>
+    <el-icon><Back /></el-icon>
+  </el-button>
+
   <div class="hot-products">
     <div class="tabs">
       <button :class="{ active: activeTab === 'score' }" @click="changeTab('score')">好评榜</button>
@@ -74,7 +86,7 @@ onMounted(fetchProducts)
           <h3 class="product-title">{{ product.title }}</h3>
           <p class="product-price">￥{{ product.price.toFixed(2) }}</p>
           <p class="product-sales">销量：{{ product.sales }}</p>
-          <p class="product-score">好评率：{{ (product.score * 100).toFixed(1) }}%</p>
+          <p class="product-score">好评率：{{ (product.rate * 20).toFixed(1) }}%</p>
           <div class="product-tags">
             <span class="tag">30天热销</span>
             <span class="tag gold">精选好评</span>
