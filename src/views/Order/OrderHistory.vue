@@ -13,6 +13,7 @@ onMounted(async () => {
     const response = await getHistoryOrders()
     if (response.data.code === '200') {
       historyOrders.value = response.data.data
+
     } else {
       ElMessage.error('获取历史订单失败: ' + response.data.msg)
     }

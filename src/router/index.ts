@@ -1,5 +1,4 @@
 import {createRouter, createWebHashHistory} from "vue-router"
-import Order from "../views/Cart/Order.vue";
 import Cart from "../views/Cart/Cart.vue";
 import AdvertisementList from '../views/AdvertiseMent/AdvertisementList.vue'
 import AdvertisementEdit from '../views/AdvertiseMent/AdvertisementEdit.vue'
@@ -107,11 +106,6 @@ const router = createRouter({
             path: '/cart',
             name: 'Cart',
             component: Cart
-        },
-        {
-            path: '/order',
-            name: 'Order',
-            component: Order
         },
         {
             path: '/orderHistory',

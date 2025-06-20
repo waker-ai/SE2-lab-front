@@ -1,15 +1,9 @@
 // src/api/order.ts
 import {axios} from '../utils/request'
 
-interface  ShippingAddress {
-    name: string;
-    phone: string;
-    zipCode: string;//邮编
-    address: string;
-}
 interface OrderData{
     cartItemIds: string[];
-    shippingAddress: ShippingAddress;
+    shippingAddressId: number;
     paymentMethod: string;
 }
 interface  PaymentNotification {

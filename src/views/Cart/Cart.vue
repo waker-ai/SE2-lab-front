@@ -1,12 +1,13 @@
 
 <script setup lang="ts">
-import { ref, onMounted,computed ,watch} from 'vue'
+import {ref, onMounted, computed, watch, nextTick} from 'vue'
 import { getCartList, updateCartItem, removeCartItem } from '../../api/cart'
 import { ElMessage } from 'element-plus'
 import {useRouter} from "vue-router";
 // import { cloneDeep } from 'lodash-es'
 import { getAvailableCoupons,applyCoupon, Coupon } from '../../api/coupon.ts'
 import { getDefaultAddress,getAddresses, Address } from '../../api/address.ts'
+import {initiatePayment, submitOrder} from "../../api/order.ts";
 const username = sessionStorage.getItem('username') || ''
 
 interface CartItem {
@@ -16,6 +17,22 @@ interface CartItem {
   quantity: number; // 当前数量
   originalQuantity: number; // 原始数量（新增字段）
   // 如果有其他字段，也可以在这里添加
+}
+
+const shippingAddressId = ref<number | null>(null)
+
+const cartItemIds = ref<string[]>([])
+const paymentMethod = ref('ALIPAY')
+const paymentForm = ref<string | null>(null)
+interface OrderCartItem {
+  cartItemId: string;
+  productId: number;
+  title: string;
+  price: number;
+  description: string;
+  cover: string;
+  detail: string;
+  quantity: number;
 }
 
 const router = useRouter()
@@ -55,6 +72,7 @@ const updateQuantity = async (cartItemId: string, quantity: number) => {
 }
 
 
+
 const removeItem = async (cartItemId: string) => {
   try {
     await removeCartItem(cartItemId)
@@ -64,25 +82,10 @@ const removeItem = async (cartItemId: string) => {
     ElMessage.error('删除商品失败')
   }
 }
-const goToCheckout = async () =>{
-  if (selectedCoupon.value) {
-    try {
-      await applyCoupon(selectedCoupon.value) // 调用后端接口标记为已使用
-      ElMessage.success('优惠券已应用')
-    } catch (e) {
-      ElMessage.error('优惠券应用失败')
-      return // 失败就不跳转了
-    }
-  }
 
-  // 成功后跳转并传递金额信息
-  router.push('/order')
-}
 const goBack = () => {
   router.push('/mainpage') // 返回上一页
 }
-
-// onMounted(fetchCartItems)
 
 //优惠卷
 const availableCoupons = ref<Coupon[]>([])
@@ -130,6 +133,10 @@ const fetchDefaultAddress = async () => {
   try {
     const res = await getDefaultAddress(username)
     defaultAddress.value = res.data.data
+    if (defaultAddress.value) {
+      shippingAddressId.value = defaultAddress.value.id ?? null;
+    }
+    console.log(res.data.data)
   } catch (e) {
     ElMessage.error('获取默认地址失败')
   }
@@ -149,6 +156,7 @@ const selectAddress = (id: number) => {
   const selected = allAddresses.value.find(addr => addr.id === id) || null
   if (selected) {
     defaultAddress.value = selected
+    shippingAddressId.value = selected.id ?? null;
   }
   showAddressDialog.value = false
 }
@@ -158,12 +166,92 @@ watch(selectedAddressId, (newVal) => {
   }
 })
 
+const fetchCartItemsToOrder = async () => {
+  try {
+    const response = await getCartList()
+    const cartData = response.data.data
+    console.log("cartData: ", cartData)
+    cartItemIds.value = cartData.items.map((item: OrderCartItem) => item.cartItemId)
+    console.log("购物车商品总数；", cartData.total)
+    console.log("购物车总金额：", cartData.totalAmount)
+  } catch (error) {
+    ElMessage.error('获取购物车列表失败')
+  }
+}
+
+const submitOrderAndPay = async () => {
+  if (!shippingAddressId.value) {
+    ElMessage.error('请选择收货地址')
+    return
+  }
+  if(selectedCoupon.value) {
+    try {
+      await applyCoupon(selectedCoupon.value)
+      ElMessage.success('优惠卷应用成功')
+    } catch (e) {
+      ElMessage.error('优惠券应用失败')
+      return //应用失败停止跳转
+    }
+  }
+  try {
+    console.log("提交订单的 cartItemIds: ", cartItemIds.value);
+    const orderResponse = await submitOrder({
+      cartItemIds: cartItemIds.value,// 从购物车页面传递过来的商品ID列表
+      shippingAddressId: shippingAddressId.value,
+      paymentMethod: paymentMethod.value
+    })
+
+    console.log("orderResponse: ")
+    console.log(orderResponse)
+
+    const orderId = orderResponse.data.data.orderId
+
+    // 发起支付
+    try {
+      const paymentResponse = await initiatePayment(orderId);
+      if (paymentResponse.data.data.paymentForm) {
+        paymentForm.value = paymentResponse.data.data.paymentForm;
+      } else {
+        throw new Error("支付表单数据为空");
+      }
+    } catch (error) {
+      console.error("支付过程出现错误:", error);
+      ElMessage.error("支付表单获取失败，请稍后再试");
+    }
+
+    //这里确保支付表单渲染后自动提交
+    nextTick(() => {
+      if (paymentForm.value) {
+        const formElement = document.createElement('div');
+        formElement.innerHTML = paymentForm.value;
+
+        // 将支付表单动态添加到 DOM 中
+        document.body.appendChild(formElement);
+
+        // 自动提交支付表单
+        const form = formElement.querySelector('form');
+        if (form) {
+          form.submit();
+        }
+      }
+    });
+    // 这里需要根据实际情况处理支付表单的展示，可能需要使用 v-html 或其他方式
+    // console.log("支付表单内容：", paymentForm.value);
+    ElMessage.success('订单提交成功，请完成支付')
+  } catch (error) {
+    ElMessage.error('订单提交失败')
+    // console.error('支付过程出现错误: ', error);
+  }
+}
+
 onMounted(async () => {
   await fetchCartItems()
+  await fetchCartItemsToOrder()
   await fetchAvailableCoupons()
   await fetchDefaultAddress()
   await fetchAllAddresses()
 })
+
 </script>
 
 <template>
@@ -234,7 +322,7 @@ onMounted(async () => {
     </el-dialog>
 
     <div class="cart-actions">
-      <el-button type="primary" @click="goToCheckout">提交订单</el-button>
+      <el-button type="primary" @click="submitOrderAndPay">提交订单</el-button>
       <el-button type="text" @click="goBack">返回</el-button>
     </div>
   </div>

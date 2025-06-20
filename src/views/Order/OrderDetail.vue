@@ -29,7 +29,7 @@ onMounted(async () => {
     const response = await getOrderDetail(orderId)
     if (response.data.code === '200') {
       orderDetail.value = response.data.data
-      // console.log(orderDetail.value?.items)
+      console.log("orderDetail : ", orderDetail.value)
     } else {
       ElMessage.error('获取订单详情失败: ' + response.data.msg)
     }
