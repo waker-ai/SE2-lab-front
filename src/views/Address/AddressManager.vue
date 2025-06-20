@@ -9,7 +9,10 @@ import {
   Address
 } from '../../api/address.ts'
 
+import '../../utils/global.css'
+
 import { useRouter } from 'vue-router'
+import {Back} from "@element-plus/icons-vue";
 
 const router = useRouter()
 const username = sessionStorage.getItem('username') || '';
@@ -27,7 +30,7 @@ const fetchAddresses = async () => {
 
 onMounted(fetchAddresses)
 
-const goBack = () => router.push('/dashboard')
+const handleBack = () => router.push('/dashboard')
 
 const setDefault = async (item: Address) => {
   await setDefaultAddress(item.id!, username)
@@ -85,8 +88,8 @@ const submitForm = async () => {
 <template>
   <el-card class="address-manager-card">
     <!-- 返回按钮 -->
-    <el-button type="text" @click="goBack" icon="ArrowLeft" style="margin-bottom: 20px">
-      返回
+    <el-button @click="handleBack" type="primary" circle class="back-button">
+      <el-icon><Back /></el-icon>
     </el-button>
 
     <!-- 地址表单列表 -->

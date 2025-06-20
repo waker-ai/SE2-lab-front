@@ -3,6 +3,9 @@ import { ref, onMounted } from 'vue'
 import { getProductsBySales, getProductsByScore } from '../../api/products_list.ts'
 import { useRouter } from 'vue-router'
 import {Back} from "@element-plus/icons-vue";
+import '../../utils/global.css'
+
+
 const router = useRouter()
 interface Product{
   id: number;
@@ -68,7 +71,7 @@ onMounted(fetchProducts)
 <template>
 
   <!-- 返回按钮 -->
-  <el-button @click="handleBack" type="primary" circle plain>
+  <el-button @click="handleBack" type="primary" circle class="back-button">
     <el-icon><Back /></el-icon>
   </el-button>
 

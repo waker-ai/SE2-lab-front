@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, computed} from 'vue'
 import { getProductDetail, Product, updateProduct, getProductReviews } from '../../api/product'
 import { useRoute } from 'vue-router'
 import { addToCart } from '../../api/cart'
 import { ElMessage } from 'element-plus'
 import {Back} from "@element-plus/icons-vue";
 import {router} from "../../router";
+import '../../utils/global.css'
 
 // 评论加载
 const reviews = ref<any[]>([])
@@ -25,7 +26,8 @@ const fetchProductReviews = async () => {
 }
 
 // 编辑功能
-const isAdmin = ref(true)
+const userRole = ref(sessionStorage.getItem('role'))
+const isAdmin = computed(() => userRole.value === 'ADMINISTRATOR')
 const editDialogVisible = ref(false)
 const editForm = ref<Product>({
   id: 0,
@@ -118,13 +120,13 @@ const addProductToCart = async () => {
 
 // 返回处理
 const handleBack = () => {
-  router.push(`/mainpage`)
+  router.back();
 }
 </script>
 
 <template>
   <!-- 返回按钮 -->
-  <el-button @click="handleBack" type="primary" circle plain>
+  <el-button @click="handleBack" type="primary" circle class = "back-button">
     <el-icon><Back /></el-icon>
   </el-button>
 
@@ -178,7 +180,7 @@ const handleBack = () => {
     </el-card>
   </div>
 
-  <el-dialog v-model="editDialogVisible" title="修改商品信息" width="600px">
+  <el-dialog v-if="isAdmin" v-model="editDialogVisible" title="修改商品信息" width="600px">
     <el-form :model="editForm" label-width="100px">
       <el-form-item label="书名">
         <el-input v-model="editForm.title" />
@@ -238,25 +240,13 @@ const handleBack = () => {
   padding: 10px 20px !important;
   font-size: 14px;
   font-weight: 500;
-  transition: background-color 0.2s ease, transform 0.2s;
+  transition: background-color 0.2s ease, transform 0.3s;
 }
 
-.el-button--primary {
-  background: linear-gradient(to right, #00c6ff, #0072ff);
-  color: white;
-  border: none;
-}
-
-.el-button--warning {
-  background-color: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeeba;
-}
 
 .el-button:hover {
   transform: scale(1.05);
 }
-
 
 .cover-wrapper {
   flex-shrink: 0;
@@ -265,12 +255,13 @@ const handleBack = () => {
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s;
+
 }
 .cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.5s;
 }
 .cover:hover {
   transform: scale(1.05);

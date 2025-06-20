@@ -4,6 +4,7 @@ import {axios} from '../utils/request'
 interface OrderData{
     cartItemIds: string[];
     shippingAddressId: number;
+    selectedCouponId: number | null;
     paymentMethod: string;
 }
 interface  PaymentNotification {

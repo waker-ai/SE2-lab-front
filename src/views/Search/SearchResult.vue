@@ -2,8 +2,9 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Search, ArrowLeft } from '@element-plus/icons-vue'
+import {Search, ArrowLeft, Back} from '@element-plus/icons-vue'
 import { getProductList, Product } from '../../api/product'
+import '../../utils/global.css'
 
 // 路由
 const route = useRoute()
@@ -117,7 +118,7 @@ const goToDetail = (id: number) => {
   router.push(`/products/${id}`)
 }
 
-const goToHome = () => {
+const handleBack = () => {
   router.push('/mainpage')
 }
 
@@ -137,11 +138,10 @@ onMounted(() => {
 
 <template>
   <el-main class="books-container">
-    <div style="position: fixed; top: 20px; left: 20px; z-index: 1000;">
-      <el-button @click="goToHome" type="primary" circle style="background-color: white; color: #409EFF; border-color: #409EFF;">
-        <el-icon><ArrowLeft /></el-icon>
-      </el-button>
-    </div>
+    <!-- 返回按钮 -->
+    <el-button @click="handleBack" type="primary" circle class="back-button">
+      <el-icon><Back /></el-icon>
+    </el-button>
 
     <!-- 搜索框 -->
     <el-input

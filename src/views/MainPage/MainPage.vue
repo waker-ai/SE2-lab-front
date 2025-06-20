@@ -220,7 +220,7 @@ body {
   padding: 12px 24px;
   border-radius: 30px;
   font-weight: 500;
-  transition: var(--transition);
+  transition: transform 0.3s;
 }
 
 .action-btn i {
@@ -248,7 +248,7 @@ body {
   border: 1px solid var(--light-gray);
   background-color: #fff;
   cursor: pointer;
-  transition: var(--transition);
+  transition: transform 0.3s;
 }
 
 .tag:hover {

@@ -2,7 +2,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { getCouponList, Coupon } from '../../api/coupon.ts'
 import { userInfo } from '../../api/user.ts'
+import {Back} from "@element-plus/icons-vue";
+import {useRouter} from "vue-router";
 
+
+const router = useRouter()
 const coupons = ref<Coupon[]>([])
 const selectedTab = ref('all') // 可用值：all, usable, expired
 const username = ref('')
@@ -41,10 +45,19 @@ const filteredCoupons = computed(() => {
   })
 })
 
+// 返回处理
+const handleBack = () => {
+  router.back()
+}
+
 onMounted(fetchCoupons)
 </script>
 
 <template>
+  <!-- 返回按钮 -->
+  <el-button @click="handleBack" type="primary" circle class="back-button">
+    <el-icon><Back /></el-icon>
+  </el-button>
   <el-container style="padding: 20px">
     <el-aside width="200px" >
       <el-menu default-active="all" @select="selectedTab = $event">

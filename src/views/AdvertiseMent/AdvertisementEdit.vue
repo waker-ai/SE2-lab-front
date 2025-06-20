@@ -3,8 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getAdvertisements, createAdvertisement, updateAdvertisement } from "../../api/advertisement.ts";
-import { getProductList } from "../../api/product";
-import { UploadFilled, ArrowLeft } from '@element-plus/icons-vue'
+import '../../utils/global.css'
+import {Back, UploadFilled} from '@element-plus/icons-vue'
 import { API_MODULE } from "../../api/_prefix.ts";
 
 interface AdvertisementItem {
@@ -13,10 +13,6 @@ interface AdvertisementItem {
   content: string;
   imgUrl: string;
   productId: string;
-}
-
-interface ProductItem {
-  id: number;
 }
 
 const route = useRoute()
@@ -29,7 +25,6 @@ const form = ref({
 })
 
 const imageFileList = ref([])
-const products = ref<ProductItem[]>([])
 
 const handleUploadChange = async (file: any) => {
   try {
@@ -85,38 +80,30 @@ const fetchDetail = async () => {
   }
 }
 
-const fetchProducts = async () => {
-  try {
-    const response = await getProductList()
-    products.value = response.data.data as ProductItem[]
-  } catch (error) {
-    console.error('获取商品列表失败:', error)
-  }
-}
-
-const isProductIdValid = computed(() => {
-  if (!form.value.productId) return false
-  return products.value.some(product => product.id.toString() === form.value.productId)
-})
+// const fetchProducts = async () => {
+//   try {
+//     const response = await getProductList()
+//     products.value = response.data.data as ProductItem[]
+//   } catch (error) {
+//     console.error('获取商品列表失败:', error)
+//   }
+// }
+//
+// const isProductIdValid = computed(() => {
+//   if (!form.value.productId) return false
+//   return products.value.some(product => product.id.toString() === form.value.productId)
+// })
 
 const isValid = computed(() => {
   return (
       form.value.title.trim() !== '' &&
       form.value.content.trim() !== '' &&
-      form.value.imgUrl !== '' &&
-      isProductIdValid.value
+      form.value.imgUrl !== ''
+      // isProductIdValid.value
   )
 })
 
 const save = async () => {
-  if (!isValid.value) {
-    if (!isProductIdValid.value) {
-      ElMessage.error('输入的商品 ID 不存在，请重新输入。')
-    } else {
-      ElMessage.error('请填写完整信息')
-    }
-    return
-  }
   if (id) {
     await updateAdvertisement({ ...form.value, productId: parseInt(form.value.productId) })
     ElMessage.success('更新成功')
@@ -127,7 +114,7 @@ const save = async () => {
   router.push('/advertisement')
 }
 
-const goBack = () => {
+const handleBack = () => {
   router.push('/mainpage')
 }
 
@@ -135,11 +122,15 @@ onMounted(async () => {
   if (id) {
     fetchDetail()
   }
-  await fetchProducts()
 })
 </script>
 
 <template>
+  <!-- 返回按钮 -->
+  <el-button @click="handleBack" type="primary" circle class="back-button">
+    <el-icon><Back /></el-icon>
+  </el-button>
+
   <div class="advertisement-edit-panel">
     <h2 class="page-title">{{ id ? '编辑广告' : '新增广告' }}</h2>
     <hr class="section-divider" />
@@ -172,12 +163,8 @@ onMounted(async () => {
             style="width: 150px; margin-top: 10px"
         />
       </el-form-item>
-      <el-form-item label="商品ID">
-        <el-input v-model="form.productId" />
-      </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="save" :disabled="!isValid">保存</el-button>
-        <el-button @click="goBack">返回</el-button>
       </el-form-item>
     </el-form>
   </div>

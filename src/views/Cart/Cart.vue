@@ -4,10 +4,11 @@ import {ref, onMounted, computed, watch, nextTick} from 'vue'
 import { getCartList, updateCartItem, removeCartItem } from '../../api/cart'
 import { ElMessage } from 'element-plus'
 import {useRouter} from "vue-router";
-// import { cloneDeep } from 'lodash-es'
+import { API_MODULE } from "../../api/_prefix.ts";
 import { getAvailableCoupons,applyCoupon, Coupon } from '../../api/coupon.ts'
 import { getDefaultAddress,getAddresses, Address } from '../../api/address.ts'
 import {initiatePayment, submitOrder} from "../../api/order.ts";
+import {Back} from "@element-plus/icons-vue";
 const username = sessionStorage.getItem('username') || ''
 
 interface CartItem {
@@ -83,8 +84,8 @@ const removeItem = async (cartItemId: string) => {
   }
 }
 
-const goBack = () => {
-  router.push('/mainpage') // 返回上一页
+const handleBack = () => {
+  router.push('/mainpage')
 }
 
 //优惠卷
@@ -198,6 +199,7 @@ const submitOrderAndPay = async () => {
     const orderResponse = await submitOrder({
       cartItemIds: cartItemIds.value,// 从购物车页面传递过来的商品ID列表
       shippingAddressId: shippingAddressId.value,
+      selectedCouponId: selectedCouponId.value,
       paymentMethod: paymentMethod.value
     })
 
@@ -255,6 +257,11 @@ onMounted(async () => {
 </script>
 
 <template>
+  <!-- 返回按钮 -->
+  <el-button @click="handleBack" type="primary" circle class="back-button">
+    <el-icon><Back /></el-icon>
+  </el-button>
+
   <div class="cart-container">
     <h1>购物车</h1>
     <el-table :data="cartItems" style="width: 100%">
@@ -323,14 +330,15 @@ onMounted(async () => {
 
     <div class="cart-actions">
       <el-button type="primary" @click="submitOrderAndPay">提交订单</el-button>
-      <el-button type="text" @click="goBack">返回</el-button>
     </div>
   </div>
 </template>
 
 <style scoped>
 .cart-container {
-  padding: 20px;
+  padding-top: 80px; /* 为返回按钮留空间 */
+  padding-left: 30px;
+  padding-right: 30px;
 }
 .address-card {
   margin-bottom: 20px;

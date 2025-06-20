@@ -2,7 +2,10 @@
 import { ref, onMounted } from 'vue';
 import { getMember, Member } from '../../api/membership';
 import { ElMessage } from 'element-plus';
+import {Back} from "@element-plus/icons-vue";
+import { useRouter } from 'vue-router'
 
+const router = useRouter();
 const member = ref<Member | null>(null);
 const loading = ref(false);
 
@@ -27,14 +30,24 @@ const fetchMemberInfo = async () => {
   }
 };
 
+// 返回处理
+const handleBack = () => {
+  router.push(`/mainpage`)
+}
+
 onMounted(() => {
   fetchMemberInfo();
 });
 </script>
 
 <template>
+  <!-- 返回按钮 -->
+  <el-button @click="handleBack" type="primary" circle class="back-button">
+    <el-icon><Back /></el-icon>
+  </el-button>
+
   <div class="member-detail">
-    <el-card v-loading="loading">
+    <el-card v-loading="loading" class="member-card">
       <template #header>
         <div class="card-header">
           <h2>会员信息</h2>
@@ -56,18 +69,60 @@ onMounted(() => {
 
 <style scoped>
 .member-detail {
-  max-width: 600px;
-  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh; /* 页面垂直居中 */
   padding: 20px;
+  background-color: #f5f7fa; /* 可选：淡背景 */
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.card-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.member-card {
+  width: 100%;
+  max-width: 900px; /* 设置最大宽度 */
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  background-color: #fff;
+  transition: transform 0.3s;
+}
+
+.member-card:hover {
+  transform: translateY(-5px);
 }
 
 .member-info p {
-  margin: 10px 0;
+  font-size: 14px;
+  color: #333;
+  margin: 8px 0;
 }
+.back-button {
+  position: fixed;         /* 固定在页面左上角 */
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  width: 42px;
+  height: 42px;
+  border: none;
+  background: linear-gradient(to right, #00c6ff, #0072ff);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: white;
+  transition: all 0.25s ease;
+}
+
+.back-button:hover {
+  transform: scale(1.1);
+  background: linear-gradient(to right, #0072ff, #0051d4);
+}
+
+.back-button:focus {
+  outline: none;
+}
+
 </style>

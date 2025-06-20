@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { Edit, Delete } from "@element-plus/icons-vue"
+import {Edit, Delete, Back} from "@element-plus/icons-vue"
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElLoading } from 'element-plus'
 import { getAdvertisements, deleteAdvertisement } from "../../api/advertisement.ts"
 import { ArrowLeft, CirclePlus } from '@element-plus/icons-vue'
+import '../../utils/global.css'
 
 // 定义广告项类型
 interface AdvertisementItem {
@@ -65,6 +66,11 @@ const handleDelete = async (id: number) => {
   }
 }
 
+// 返回处理
+const handleBack = () => {
+  router.push(`/mainpage`)
+}
+
 // 初始化加载
 onMounted(fetchAdvertisements)
 
@@ -77,6 +83,11 @@ watch(() => route.path, (newPath) => {
 </script>
 
 <template>
+  <!-- 返回按钮 -->
+  <el-button @click="handleBack" type="primary" circle class="back-button">
+    <el-icon><Back /></el-icon>
+  </el-button>
+
   <div class="advertisement-panel">
     <h2 class="page-title">广告管理中心</h2>
     <hr class="section-divider" />
@@ -99,7 +110,6 @@ watch(() => route.path, (newPath) => {
           <div class="ad-info">
             <h3 class="ad-title">{{ ad.title }}</h3>
             <p class="ad-content">{{ ad.content }}</p>
-            <p class="ad-product-id">关联商品ID：{{ ad.productId }}</p>
           </div>
           <div class="ad-actions">
             <el-button circle :icon="Edit" @click="handleEdit(ad.id)" />
