@@ -1,80 +1,113 @@
 <template>
-  <el-main class="main-wrapper">
-    <!-- 广告轮播 -->
-    <div class="carousel-container">
-      <el-carousel :interval="5000" arrow="always" height="400px">
-        <el-carousel-item v-for="ad in advertisements" :key="ad.id">
-          <el-image :src="ad.imgUrl" fit="contain" class="carousel-image" />
-        </el-carousel-item>
-      </el-carousel>
-    </div>
+  <div class="page-container">
+    <el-main class="main-wrapper">
 
-    <!-- 操作按钮区域 -->
-    <div class="action-bar">
-      <!-- 管理员操作按钮 -->
-      <div class="admin-bar" v-if="isAdmin">
-        <el-button class="action-btn" @click="goToCreateAdvertisement">
-          <i class="fas fa-plus-circle"></i> 新增广告
-        </el-button>
-        <el-button class="action-btn" @click="goToAdvertisementList">
-          <i class="fas fa-list"></i> 广告列表
-        </el-button>
-        <el-button class="action-btn" @click="goToCreate">
-          <i class="fas fa-book-medical"></i> 创建书籍
-        </el-button>
-        <el-button class="action-btn" type="danger" @click="goToManage">
-          <i class="fas fa-cog"></i> 管理商品
-        </el-button>
-
-
+      <!-- 广告轮播区域 -->
+      <div class="carousel-section">
+        <el-carousel :interval="5000" type="card" height="380px" arrow="hover" trigger="click">
+          <el-carousel-item v-for="ad in advertisements" :key="ad.id" class="carousel-item">
+            <el-image :src="ad.imgUrl" fit="cover" class="carousel-image">
+              <template #placeholder>
+                <div class="image-slot">Loading...</div>
+              </template>
+            </el-image>
+          </el-carousel-item>
+        </el-carousel>
       </div>
 
-      <!-- 用户操作按钮 -->
-      <el-button class="action-btn" @click="goToHotProducts">
-        <i class="fas fa-hot-books"></i> 热门书籍
-      </el-button>
-      <div class="user-bar">
-        <el-button class="action-btn" type="primary" @click="goToCart">
-          <i class="fas fa-shopping-cart"></i> 购物车
-        </el-button>
-      </div>
-    </div>
-
-    <!-- 分类标签 -->
-    <div class="category-tags">
-      <div
-          v-for="cat in categories"
-          :key="cat.value"
-          :class="['tag', { active: selectedCategory === cat.value }]"
-          @click="selectedCategory = cat.value"
-      >
-        {{ cat.label }}
-      </div>
-    </div>
-
-    <!-- 商品展示区 -->
-    <div class="book-grid">
-      <el-card
-          v-for="book in filteredBooks"
-          :key="book.id"
-          class="book-card"
-          shadow="hover"
-          @click="goToDetail(book.id)"
-      >
-        <img :src="book.cover" class="book-cover" />
-        <div class="book-info">
-          <div class="book-title">{{ book.title }}</div>
-          <div class="book-price">￥{{ book.price }}</div>
-          <div class="book-rate" v-if="book.rate !== undefined">
-            评分：{{ book.rate.toFixed(2) }}
+      <!-- 操作与筛选区域 (Sticky Header) -->
+      <div class="toolbar-container">
+        <!-- 上层：操作按钮 -->
+        <div class="action-bar">
+          <div class="left-actions">
+            <!-- 管理员操作组 -->
+            <el-button-group v-if="isAdmin" class="admin-group">
+              <el-button type="primary" plain round @click="goToCreateAdvertisement">
+                <i class="fas fa-ad"></i> 新增广告
+              </el-button>
+              <el-button type="primary" plain round @click="goToAdvertisementList">
+                <i class="fas fa-list"></i> 广告列表
+              </el-button>
+              <el-button type="success" plain round @click="goToCreate">
+                <i class="fas fa-plus"></i> 创建书籍
+              </el-button>
+              <el-button type="warning" plain round @click="goToManage">
+                <i class="fas fa-cog"></i> 管理商品
+              </el-button>
+            </el-button-group>
           </div>
-          <div class="book-rate" v-else>
-            暂无评分
+
+          <div class="right-actions">
+            <el-button class="action-btn glass-btn" @click="goToHotProducts">
+              <i class="fas fa-fire text-danger"></i> 热门书籍
+            </el-button>
+            <el-badge :value="0" :hidden="true" class="cart-badge"> <!-- 这里预留了购物车数量Badge -->
+              <el-button type="primary" class="action-btn shadow-btn" @click="goToCart" round>
+                <i class="fas fa-shopping-cart"></i> 我的购物车
+              </el-button>
+            </el-badge>
           </div>
         </div>
-      </el-card>
-    </div>
-  </el-main>
+
+        <!-- 下层：分类标签 -->
+        <div class="category-bar">
+          <div class="category-scroll">
+            <div
+                v-for="cat in categories"
+                :key="cat.value"
+                :class="['category-pill', { active: selectedCategory === cat.value }]"
+                @click="selectedCategory = cat.value"
+            >
+              {{ cat.label }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 商品展示网格 -->
+      <div class="book-grid-container">
+        <transition-group name="list">
+          <el-card
+              v-for="book in filteredBooks"
+              :key="book.id"
+              class="book-card"
+              :body-style="{ padding: '0px', display: 'flex', flexDirection: 'column', height: '100%' }"
+              shadow="hover"
+              @click="goToDetail(book.id||0)"
+          >
+            <div class="card-image-wrapper">
+              <el-image :src="book.cover" fit="cover" loading="lazy" class="book-cover" />
+              <div class="hover-overlay">
+                <span>查看详情</span>
+              </div>
+            </div>
+
+            <div class="book-info">
+              <h3 class="book-title" :title="book.title">{{ book.title }}</h3>
+
+              <div class="book-meta">
+                <div class="price-tag">
+                  <span class="currency">￥</span>
+                  <span class="amount">{{ book.price }}</span>
+                </div>
+                <div class="rate-tag" v-if="book.rate !== undefined">
+                  <i class="fas fa-star text-warning"></i>
+                  <span>{{ book.rate.toFixed(1) }}</span>
+                </div>
+                <div class="rate-tag no-rate" v-else>
+                  暂无评分
+                </div>
+              </div>
+            </div>
+          </el-card>
+        </transition-group>
+
+        <!-- 空状态展示 -->
+        <el-empty v-if="filteredBooks.length === 0" description="暂无相关书籍" />
+      </div>
+
+    </el-main>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -84,6 +117,7 @@ import { getProductList, Product } from '../../api/product'
 import { getAdvertisements, Advertisement } from "../../api/advertisement.ts"
 import { ElMessage } from 'element-plus'
 
+// --- 保持原有逻辑不变 ---
 const books = ref<Product[]>([])
 const advertisements = ref<Advertisement[]>([])
 const router = useRouter()
@@ -147,268 +181,330 @@ const goToAdvertisementList = () => router.push('/advertisement')
 <style scoped>
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
+/* --- 全局变量与基础设置 --- */
 :root {
-  --primary: #3498db;
-  --secondary: #2ecc71;
-  --accent: #e74c3c;
-  --light: #f8f9fa;
-  --dark: #343a40;
-  --gray: #6c757d;
-  --light-gray: #e9ecef;
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --transition: all 0.3s ease;
+  --primary-color: #409eff;
+  --primary-dark: #337ecc;
+  --secondary-color: #67c23a;
+  --text-main: #303133;
+  --text-secondary: #909399;
+  --bg-color: #f5f7fa;
+  --card-bg: #ffffff;
+  --price-color: #f56c6c;
+  --shadow-sm: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --radius-lg: 16px;
+  --radius-md: 8px;
 }
 
-body {
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7f1 100%);
+.page-container {
   min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  color: var(--dark);
+  background-color: var(--bg-color);
+  padding-bottom: 40px;
 }
 
 .main-wrapper {
-  background-color: #fff;
-  padding: 30px 60px;
+  max-width: 1280px;
   margin: 0 auto;
-  /* 删除 max-width */
-  /* max-width: 1280px; */
+  padding: 20px;
   box-sizing: border-box;
-  width: 100%;
 }
 
-/* 轮播图样式 */
-.carousel-container {
-  border-radius: 16px;
+/* --- 轮播图区域 --- */
+.carousel-section {
+  margin-bottom: 30px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  margin-bottom: 40px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
 
-  /* 新增宽度控制 */
-  max-width: 730px;
-  margin-left: auto;
-  margin-right: auto;
+.carousel-item {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .carousel-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
+  object-fit: cover; /* 保证图片填满且不变形 */
+  display: block;
 }
 
-.carousel-container:hover .carousel-image {
-  transform: scale(1.03);
+/* --- 工具栏区域 (Action Bar & Categories) --- */
+.toolbar-container {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: var(--shadow-sm);
+  position: sticky; /* 可选：让工具栏吸顶 */
+  top: 10px;
+  z-index: 100;
 }
 
-/* 操作按钮区域 */
 .action-bar {
   display: flex;
   justify-content: space-between;
-  margin: 30px 0;
+  align-items: center;
   flex-wrap: wrap;
   gap: 15px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ebeef5;
+  padding-bottom: 15px;
 }
 
-.admin-bar, .user-bar {
+.admin-group .el-button {
+  margin-left: 0;
+  border-radius: 0;
+}
+.admin-group .el-button:first-child {
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+}
+.admin-group .el-button:last-child {
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.right-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
+  gap: 12px;
+  margin-left: auto;
 }
 
-.action-btn {
-  padding: 12px 24px;
-  border-radius: 30px;
-  font-weight: 500;
-  transition: transform 0.3s;
+.glass-btn {
+  background: #f4f4f5;
+  border: none;
+  color: #606266;
+}
+.glass-btn:hover {
+  background: #e9e9eb;
+  color: var(--primary-color);
 }
 
-.action-btn i {
-  margin-right: 8px;
+.text-danger {
+  color: #f56c6c;
 }
 
-.action-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* 分类标签 */
-.category-tags {
+/* --- 分类标签 --- */
+.category-bar {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin: 30px 0;
 }
 
-.tag {
-  padding: 10px 24px;
-  font-size: 16px;
-  border-radius: 30px;
-  border: 1px solid var(--light-gray);
-  background-color: #fff;
+.category-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px;
+  /* 隐藏滚动条 */
+  scrollbar-width: none;
+}
+.category-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.category-pill {
+  padding: 8px 24px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background-color: transparent;
   cursor: pointer;
-  transition: transform 0.3s;
+  transition: all 0.3s ease;
+  user-select: none;
+  white-space: nowrap;
 }
 
-.tag:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+.category-pill:hover {
+  color: var(--primary-color);
+  background-color: rgba(64, 158, 255, 0.1);
 }
 
-.tag.active {
-  background: linear-gradient(135deg, var(--primary), #4a69bd);
-  color: #222;
-  border-color: transparent;
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+.category-pill.active {
+  background-color: var(--primary-color);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
 }
 
-/* 商品网格 */
-.book-grid {
+/* --- 书籍网格 --- */
+.book-grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 30px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+  padding: 0 4px; /* 避免阴影被截断 */
 }
 
+/* 卡片样式 */
 .book-card {
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  cursor: pointer;
-  height: 100%;
-  position: relative;
-  transition: transform 0.3s;
-  flex-direction: column;
   border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+  background: var(--card-bg);
+  position: relative;
+  cursor: pointer;
 }
 
 .book-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* 图片容器 */
+.card-image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4; /* 标准书籍比例 */
+  overflow: hidden;
+  background: #f9f9f9;
 }
 
 .book-cover {
   width: 100%;
-  height: 320px;
-  object-fit: cover;
-  border-bottom: 1px solid var(--light-gray);
+  height: 100%;
+  display: block;
+  transition: transform 0.5s ease;
 }
 
+.book-card:hover .book-cover {
+  transform: scale(1.05);
+}
+
+/* 悬停遮罩 */
+.hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hover-overlay span {
+  color: #fff;
+  border: 1px solid #fff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  backdrop-filter: blur(4px);
+}
+
+.book-card:hover .hover-overlay {
+  opacity: 1;
+}
+
+/* 书籍信息 */
 .book-info {
-  padding: 20px;
+  padding: 16px;
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
+  justify-content: space-between;
 }
 
 .book-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 10px;
+  color: var(--text-main);
+  margin: 0 0 12px 0;
   line-height: 1.4;
-  min-height: 50px;
+  /* 限制两行显示 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.book-price {
-  color: var(--accent);
-  font-weight: 700;
-  font-size: 22px;
-  margin: 10px 0;
+.book-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.book-rate {
-  margin: 10px 0;
+.price-tag {
+  color: var(--price-color);
+  font-weight: bold;
 }
 
-.book-actions {
-  margin-top: auto;
-  padding-top: 15px;
+.currency {
+  font-size: 12px;
 }
 
-/* 响应式设计 */
-@media (max-width: 1200px) {
+.amount {
+  font-size: 20px;
+}
+
+.rate-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: #f4f4f5;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.text-warning {
+  color: #e6a23c;
+}
+
+/* --- Vue Transition 列表动画 --- */
+.list-move,
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
+}
+.list-leave-active {
+  position: absolute; /* 确保删除时布局平滑 */
+}
+
+/* --- 响应式调整 --- */
+@media (max-width: 768px) {
   .main-wrapper {
-    padding: 25px;
+    padding: 10px;
   }
 
-  .book-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 25px;
+  .carousel-section {
+    height: auto !important;
   }
-}
-
-@media (max-width: 992px) {
-  .carousel-container {
-    margin-bottom: 30px;
+  .el-carousel__container {
+    height: 200px !important;
   }
 
   .action-bar {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
   }
 
-  .admin-bar, .user-bar {
-    width: 100%;
-    justify-content: center;
+  .right-actions {
+    margin-left: 0;
+    justify-content: space-between;
   }
 
-  .category-tags {
+  .book-grid-container {
+    grid-template-columns: repeat(2, 1fr); /* 手机端两列 */
     gap: 12px;
   }
 
-  .tag {
-    padding: 8px 20px;
-    font-size: 15px;
-  }
-
-  .book-grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 20px;
-  }
-}
-
-@media (max-width: 768px) {
-  .main-wrapper {
-    padding: 20px;
-    margin: 10px;
-  }
-
-  .carousel-container {
-    border-radius: 12px;
-  }
-
-  .action-btn {
-    padding: 10px 18px;
+  .book-title {
     font-size: 14px;
   }
 
-  .book-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-  }
-
-  .book-cover {
-    height: 280px;
-  }
-}
-
-@media (max-width: 576px) {
-  .main-wrapper {
-    padding: 15px;
-  }
-
-  .book-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .book-cover {
-    height: 350px;
-  }
-
-  .tag {
-    padding: 6px 15px;
-    font-size: 14px;
+  .amount {
+    font-size: 16px;
   }
 }
 </style>

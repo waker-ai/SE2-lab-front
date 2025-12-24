@@ -1,16 +1,25 @@
 <script setup lang="ts">
-import {ref, onMounted, computed} from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { getProductDetail, Product, updateProduct, getProductReviews } from '../../api/product'
 import { useRoute } from 'vue-router'
 import { addToCart } from '../../api/cart'
 import { ElMessage } from 'element-plus'
-import {Back} from "@element-plus/icons-vue";
-import {router} from "../../router";
+import {
+  Back,
+  ShoppingCart,
+  Edit,
+  ChatDotRound,
+  CollectionTag,
+  UserFilled
+} from "@element-plus/icons-vue";
+import { router } from "../../router";
 import '../../utils/global.css'
 
 // 评论加载
 const reviews = ref<any[]>([])
 const reviewsLoading = ref(true)
+const activeTab = ref('specs') // 控制下方 Tab 切换
+
 const fetchProductReviews = async () => {
   try {
     const productId = Number(route.params.id)
@@ -19,7 +28,6 @@ const fetchProductReviews = async () => {
     reviews.value = reviewsRes.data.data
   } catch (error) {
     console.error("获取商品评论失败", error)
-    ElMessage.error('加载评论失败，请刷新页面')
   } finally {
     reviewsLoading.value = false
   }
@@ -122,218 +130,551 @@ const addProductToCart = async () => {
 const handleBack = () => {
   router.back();
 }
+
+// 库存状态辅助函数
+const getStockStatus = (stock: number) => {
+  if (stock <= 0) return { type: 'info', text: '暂时缺货' };
+  if (stock < 10) return { type: 'danger', text: '库存紧张' };
+  return { type: 'success', text: '现货充足' };
+}
 </script>
 
 <template>
-  <!-- 返回按钮 -->
-  <el-button @click="handleBack" type="primary" circle class = "back-button">
-    <el-icon><Back /></el-icon>
-  </el-button>
-
-  <el-card v-if="loading" class="loading-card el-card">
-    <el-skeleton animated :rows="6" />
-  </el-card>
-
-  <div v-else-if="error" class="error-message">
-    <el-alert type="error" :title="error" show-icon />
-  </div>
-
-  <div v-else-if="product" class="product-detail">
-    <el-card class="el-card">
-      <div class="product-header">
-        <div class="cover-wrapper">
-          <el-image :src="product.cover" class="cover" fit="cover" />
-        </div>
-        <div class="info">
-          <h2>{{ product.title }}</h2>
-          <p>分类：<strong>{{ categoryMap[product.category] || '未分类' }}</strong></p>
-          <p class="price">价格：<span>¥{{ product.price }}</span></p>
-          <p>评分：<el-rate v-model="product.rate" disabled :colors="['#99A9BF', '#F7BA2A', '#FF9900']" />{{ product.rate?.toFixed(2) || '暂无评分' }}</p>
-          <p>库存：<strong>{{ product.stockAmount || '暂无库存信息' }}</strong></p>
-          <p>冻结库存：<strong>{{ product.frozen || '无冻结库存' }}</strong></p>
-          <el-button type="primary" @click="addProductToCart" class="el-button">加入购物车</el-button>
-          <el-button v-if="isAdmin" type="warning" plain @click="openEditDialog" class="el-button">修改商品信息</el-button>
-        </div>
+  <div class="page-container">
+    <!-- 顶部导航 -->
+    <div class="page-header">
+      <div class="header-content">
+        <el-button @click="handleBack" link class="back-link">
+          <el-icon><Back /></el-icon> 返回列表
+        </el-button>
+        <span class="header-breadcrumb" v-if="product">
+          {{ categoryMap[product.category] }} / {{ product.title }}
+        </span>
       </div>
+    </div>
 
-      <div class="specifications">
-        <h3>规格说明</h3>
-        <ul>
-          <li v-for="spec in product.specifications" :key="spec.id">
-            {{ spec.item }}：{{ spec.value }}
-          </li>
-        </ul>
-      </div>
-
-      <div class="product-reviews">
-        <h3>商品评论</h3>
-        <el-skeleton v-if="reviewsLoading" animated :rows="3" />
-        <div v-else>
-          <div v-for="review in reviews" :key="review.id" class="review-item">
-            <p>评分：<el-rate v-model="review.rating" disabled /></p>
-            <p>评论：{{ review.comment }}</p>
-            <el-image v-if="review.photoUrl" :src="review.photoUrl" fit="cover" style="width: 150px; margin-top: 10px" />
+    <!-- 加载状态 -->
+    <div v-if="loading" class="main-wrapper loading-wrapper">
+      <el-skeleton style="width: 100%" animated>
+        <template #template>
+          <div style="display: flex; gap: 40px;">
+            <el-skeleton-item variant="image" style="width: 400px; height: 400px" />
+            <div style="flex: 1">
+              <el-skeleton-item variant="h1" style="width: 50%; margin-bottom: 20px" />
+              <el-skeleton-item variant="text" style="margin-bottom: 10px" />
+              <el-skeleton-item variant="text" style="width: 30%; margin-bottom: 30px" />
+              <el-skeleton-item variant="button" style="width: 150px; height: 50px" />
+            </div>
           </div>
-          <p v-if="reviews.length === 0">暂无评论</p>
+        </template>
+      </el-skeleton>
+    </div>
+
+    <!-- 错误状态 -->
+    <div v-else-if="error" class="main-wrapper error-wrapper">
+      <el-result icon="error" title="加载失败" :sub-title="error">
+        <template #extra>
+          <el-button type="primary" @click="fetchProduct">重试</el-button>
+        </template>
+      </el-result>
+    </div>
+
+    <!-- 商品详情主体 -->
+    <div v-else-if="product" class="main-wrapper">
+      <!-- 上部：图片与核心信息 -->
+      <div class="product-hero">
+        <!-- 左侧图片 -->
+        <div class="hero-image">
+          <el-image
+              :src="product.cover"
+              class="main-img"
+              fit="contain"
+              :preview-src-list="[product.cover]"
+          />
+        </div>
+
+        <!-- 右侧信息 -->
+        <div class="hero-info">
+          <div class="info-header">
+            <el-tag effect="dark" class="category-tag">{{ categoryMap[product.category] || '通用' }}</el-tag>
+            <h1 class="product-title">{{ product.title }}</h1>
+          </div>
+
+          <div class="product-meta">
+            <p class="description">{{ product.description || '暂无简介' }}</p>
+            <div class="rating-row">
+              <el-rate
+                  v-model="product.rate"
+                  disabled
+                  show-score
+                  text-color="#ff9900"
+                  score-template="{value} 分"
+              />
+              <span class="review-count">({{ reviews.length }} 条评价)</span>
+            </div>
+          </div>
+
+          <div class="price-panel">
+            <div class="price-box">
+              <span class="currency">¥</span>
+              <span class="amount">{{ product.price }}</span>
+            </div>
+            <div class="stock-info">
+              <el-tag :type="getStockStatus(product.stockAmount).type" effect="plain" round>
+                {{ getStockStatus(product.stockAmount).text }}
+              </el-tag>
+              <span class="stock-num">库存: {{ product.stockAmount }}</span>
+              <span class="frozen-num" v-if="product.frozen > 0">(冻结: {{ product.frozen }})</span>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <el-button
+                type="primary"
+                size="large"
+                class="cart-btn"
+                @click="addProductToCart"
+                :disabled="product.stockAmount <= 0"
+            >
+              <el-icon><ShoppingCart /></el-icon> 加入购物车
+            </el-button>
+
+            <el-button
+                v-if="isAdmin"
+                size="large"
+                class="edit-btn"
+                @click="openEditDialog"
+            >
+              <el-icon><Edit /></el-icon> 编辑商品
+            </el-button>
+          </div>
         </div>
       </div>
-    </el-card>
-  </div>
 
-  <el-dialog v-if="isAdmin" v-model="editDialogVisible" title="修改商品信息" width="600px">
-    <el-form :model="editForm" label-width="100px">
-      <el-form-item label="书名">
-        <el-input v-model="editForm.title" />
-      </el-form-item>
-      <el-form-item label="分类">
-        <el-select v-model="editForm.category" placeholder="请选择分类">
-          <el-option v-for="(label, value) in categoryMap" :key="value" :label="label" :value="value" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="价格">
-        <el-input v-model.number="editForm.price" type="number" />
-      </el-form-item>
-      <el-form-item label="库存">
-        <el-input v-model.number="editForm.stockAmount" type="number" />
-      </el-form-item>
-      <el-form-item label="规格说明">
-        <div v-for="(spec, index) in editForm.specifications" :key="index" style="margin-bottom: 8px;">
-          <el-input v-model="spec.item" placeholder="项名" style="width:45%; margin-right:5%" />
-          <el-input v-model="spec.value" placeholder="值" style="width:45%" />
+      <!-- 下部：详情与评论 Tab -->
+      <div class="product-content">
+        <el-tabs v-model="activeTab" class="detail-tabs">
+          <el-tab-pane label="规格参数" name="specs">
+            <template #label>
+              <span class="custom-tab-label">
+                <el-icon><CollectionTag /></el-icon> 规格参数
+              </span>
+            </template>
+            <div class="specs-container">
+              <el-descriptions :column="1" border class="spec-desc">
+                <el-descriptions-item
+                    v-for="spec in product.specifications"
+                    :key="spec.id"
+                    :label="spec.item"
+                    label-class-name="spec-label"
+                >
+                  {{ spec.value }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="用户评价" name="reviews">
+            <template #label>
+              <span class="custom-tab-label">
+                <el-icon><ChatDotRound /></el-icon> 用户评价 ({{ reviews.length }})
+              </span>
+            </template>
+
+            <div class="reviews-container" v-loading="reviewsLoading">
+              <template v-if="reviews.length > 0">
+                <div v-for="review in reviews" :key="review.id" class="review-card">
+                  <div class="review-header">
+                    <el-avatar :size="32" :icon="UserFilled" class="review-avatar" />
+                    <div class="review-meta">
+                      <span class="review-user">匿名用户</span>
+                      <el-rate v-model="review.rating" disabled size="small" />
+                    </div>
+                  </div>
+                  <div class="review-content">{{ review.comment }}</div>
+                  <div v-if="review.photoUrl" class="review-images">
+                    <el-image
+                        :src="review.photoUrl"
+                        fit="cover"
+                        class="review-img"
+                        :preview-src-list="[review.photoUrl]"
+                    />
+                  </div>
+                </div>
+              </template>
+              <el-empty v-else description="暂无评论，快来抢沙发吧！" />
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <el-dialog v-if="isAdmin" v-model="editDialogVisible" title="编辑商品信息" width="600px" align-center>
+      <el-form :model="editForm" label-width="80px" label-position="top">
+        <el-row :gutter="20">
+          <el-col :span="16">
+            <el-form-item label="书名">
+              <el-input v-model="editForm.title" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="分类">
+              <el-select v-model="editForm.category" style="width: 100%">
+                <el-option v-for="(label, value) in categoryMap" :key="value" :label="label" :value="value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="价格">
+              <el-input-number v-model="editForm.price" :precision="2" :step="1" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="库存">
+              <el-input-number v-model="editForm.stockAmount" :step="10" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-divider content-position="left">规格参数</el-divider>
+        <div class="spec-edit-list">
+          <div v-for="(spec, index) in editForm.specifications" :key="index" class="spec-edit-item">
+            <el-input v-model="spec.item" placeholder="属性名" style="width: 120px" />
+            <span class="spec-sep">:</span>
+            <el-input v-model="spec.value" placeholder="属性值" style="flex: 1" />
+          </div>
         </div>
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <el-button @click="editDialogVisible = false">取消</el-button>
-      <el-button type="primary" @click="submitEdit">保存</el-button>
-    </template>
-  </el-dialog>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="editDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitEdit">保存更改</el-button>
+        </span>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <style scoped>
-.product-detail {
-  padding: 40px 0;
-  background-color: #f5f7fa;
-  display: flex;
-  justify-content: center;
+/* 全局变量 */
+:root {
+  --bg-color: #f5f7fa;
+  --primary-color: #409eff;
+  --text-main: #303133;
+  --text-secondary: #909399;
+  --price-color: #f56c6c;
 }
 
-.el-card {
-  max-width: 960px;
-  width: 100%;
+.page-container {
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  padding-bottom: 40px;
+}
+
+/* 顶部导航 */
+.page-header {
   background: #fff;
-  border: none;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-  padding: 30px;
-}
-
-
-.product-header {
+  height: 60px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   display: flex;
-  gap: 30px;
-  align-items: flex-start;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.el-button {
-  border-radius: 999px !important;
-  padding: 10px 20px !important;
+.header-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.back-link {
+  font-size: 15px;
+  color: #606266;
+}
+.back-link:hover {
+  color: var(--primary-color);
+}
+
+.header-breadcrumb {
   font-size: 14px;
-  font-weight: 500;
-  transition: background-color 0.2s ease, transform 0.3s;
+  color: #909399;
+  padding-left: 16px;
+  border-left: 1px solid #dcdfe6;
 }
 
-
-.el-button:hover {
-  transform: scale(1.05);
+/* 主容器 */
+.main-wrapper {
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 20px;
 }
 
-.cover-wrapper {
+.loading-wrapper, .error-wrapper {
+  background: #fff;
+  padding: 40px;
+  border-radius: 8px;
+}
+
+/* 商品 Hero 区域 */
+.product-hero {
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px;
+  display: flex;
+  gap: 40px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+
+.hero-image {
   flex-shrink: 0;
-  width: 300px;
+  width: 400px;
   height: 400px;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fcfcfc;
 }
-.cover {
+
+.main-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s;
-}
-.cover:hover {
-  transform: scale(1.05);
 }
 
-.info {
+.hero-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
 
-.info h2 {
-  font-size: 24px;
+.info-header {
+  margin-bottom: 12px;
+}
+
+.category-tag {
+  margin-bottom: 8px;
+}
+
+.product-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-main);
   margin: 0;
-  font-weight: 600;
+  line-height: 1.3;
 }
 
-.price span {
-  font-size: 22px;
-  color: #e53935;
+.product-meta {
+  margin-bottom: 24px;
+}
+
+.description {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.rating-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.review-count {
+  font-size: 13px;
+  color: #909399;
+}
+
+/* 价格面板 */
+.price-panel {
+  background: #fdf5f5;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.price-box {
+  color: var(--price-color);
   font-weight: bold;
+  line-height: 1;
+  margin-bottom: 10px;
 }
 
-.el-button {
-  margin-top: 10px;
+.currency {
+  font-size: 20px;
+  margin-right: 4px;
+}
+
+.amount {
+  font-size: 36px;
+}
+
+.stock-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #606266;
+}
+
+.frozen-num {
+  color: #909399;
+  font-size: 12px;
+}
+
+/* 操作栏 */
+.action-bar {
+  margin-top: auto;
+  display: flex;
+  gap: 16px;
+}
+
+.cart-btn {
+  flex: 1;
+  max-width: 240px;
+  height: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+  border: none;
   transition: transform 0.2s;
 }
 
-.el-button:hover {
-  transform: scale(1.03);
+.cart-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 126, 95, 0.4);
+}
+.cart-btn:disabled {
+  background: #c0c4cc;
+  transform: none;
+  box-shadow: none;
 }
 
-.specifications,
-.product-reviews {
-  margin-top: 30px;
+.edit-btn {
+  height: 50px;
 }
 
-.specifications h3,
-.product-reviews h3 {
-  margin-bottom: 15px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.specifications ul {
-  list-style: none;
-  padding: 0;
-  font-size: 14px;
-  color: #555;
-}
-
-.review-item {
-  border: 1px solid #e0e0e0;
-  padding: 12px;
-  margin-bottom: 12px;
-  border-radius: 8px;
+/* 下方内容区 */
+.product-content {
+  margin-top: 24px;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  padding: 20px 30px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
 }
 
-.error-message {
-  text-align: center;
-  color: #f56c6c;
+.custom-tab-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 16px;
-  margin-top: 20px;
 }
 
-.loading-card {
-  width: 100%;
-  max-width: 600px;
-  margin: 50px auto;
+/* 规格参数 */
+.specs-container {
+  max-width: 800px;
+  margin: 20px 0;
+}
+
+:deep(.spec-label) {
+  width: 150px;
+  background-color: #fafafa;
+  font-weight: 600;
+}
+
+/* 评论区 */
+.reviews-container {
+  padding: 10px 0;
+}
+
+.review-card {
+  border-bottom: 1px solid #ebeef5;
+  padding: 20px 0;
+}
+.review-card:last-child {
+  border-bottom: none;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.review-avatar {
+  background: #e6f7ff;
+  color: #409eff;
+}
+
+.review-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.review-user {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.review-content {
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.review-images {
+  margin-top: 10px;
+}
+
+.review-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 4px;
+  border: 1px solid #ebeef5;
+}
+
+/* 编辑弹窗 */
+.spec-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.spec-edit-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spec-sep {
+  font-weight: bold;
+  color: #909399;
+}
+
+/* 响应式 */
+@media (max-width: 992px) {
+  .product-hero {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .hero-image {
+    width: 100%;
+    height: 300px;
+  }
 }
 </style>
